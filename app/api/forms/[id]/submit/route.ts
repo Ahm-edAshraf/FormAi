@@ -145,6 +145,14 @@ export async function POST(
       .insert({ form_id: formId, data: entries, user_id: user?.id ?? null, visitor_token: visitor })
     if (insErr) throw insErr
 
+    // Log submission event for owner monthly usage caps independent of deletes
+    try {
+      const ownerId = (form as any)?.user_id
+      if (ownerId) {
+        await supabase.from('submission_events').insert({ owner_user_id: ownerId, form_id: formId })
+      }
+    } catch {}
+
     const res = NextResponse.redirect(new URL(`/f/${form.slug}?submitted=1`, request.url), { status: 303 })
     // Persist visitor token for future submissions
     res.cookies.set(cookieName, visitor, { path: '/', maxAge: 60 * 60 * 24 * 365 })

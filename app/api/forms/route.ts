@@ -31,6 +31,10 @@ export async function POST(request: Request) {
     }
 
     const form = await createFormDraft(user.id, parsed.data)
+    // Log creation for monthly usage counting independent of deletes
+    try {
+      await supabase.from('form_creations').insert({ user_id: user.id, form_id: form.id })
+    } catch {}
     // Revalidate dashboard cache for this user
     // We don't import revalidateTag here to keep cold-start small; dynamic import
     const { revalidateTag } = await import('next/cache')
