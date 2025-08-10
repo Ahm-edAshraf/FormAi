@@ -15,7 +15,7 @@ if (!priceId) {
   console.warn('[billing/checkout] Missing STRIPE_PRICE_PRO_MONTHLY')
 }
 
-const stripe = stripeSecretKey ? new Stripe(stripeSecretKey, { apiVersion: '2024-06-20' }) : (null as any)
+const stripe = stripeSecretKey ? new Stripe(stripeSecretKey, { apiVersion: '2025-07-30.basil' as any }) : (null as any)
 
 export async function POST(request: Request) {
   try {

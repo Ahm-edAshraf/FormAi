@@ -4,7 +4,7 @@ import Stripe from 'stripe'
 import { createClient as createSupabaseServer } from '@/utils/supabase/server'
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY
-const stripe = stripeSecretKey ? new Stripe(stripeSecretKey, { apiVersion: '2024-06-20' }) : (null as any)
+const stripe = stripeSecretKey ? new Stripe(stripeSecretKey, { apiVersion: '2025-07-30.basil' as any }) : (null as any)
 
 export async function GET() {
   try {
@@ -23,7 +23,7 @@ export async function GET() {
     if (!stripeCustomerId) return NextResponse.json({ invoices: [] })
 
     const invoices = await stripe.invoices.list({ customer: stripeCustomerId, limit: 12 })
-    const items = invoices.data.map((inv) => ({
+    const items = invoices.data.map((inv: Stripe.Invoice) => ({
       id: inv.id,
       number: inv.number ?? inv.id,
       amount_due: inv.amount_due,
