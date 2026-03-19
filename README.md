@@ -116,10 +116,10 @@ cd FormAi
 
 ### 2. Install dependencies
 
-`pnpm` is recommended.
+`bun` is recommended. This repo is pinned to `Bun 1.3.9` via `packageManager` in `package.json`.
 
 ```bash
-pnpm install
+bun install
 ```
 
 ### 3. Create your local env file
@@ -133,7 +133,7 @@ Then fill in the required values.
 ### 4. Start the development server
 
 ```bash
-pnpm dev
+bun dev
 ```
 
 Open `http://localhost:3000`.
@@ -196,12 +196,12 @@ stripe listen --forward-to http://localhost:3000/api/stripe/webhook
 
 | Command | Description |
 | --- | --- |
-| `pnpm dev` | Start the dev server |
-| `pnpm build` | Create a production build |
-| `pnpm start` | Run the production server |
-| `pnpm lint` | Run ESLint |
-| `pnpm analyze` | Build with bundle analyzer enabled |
-| `pnpm lighthouse` | Run the local Lighthouse helper script |
+| `bun dev` | Start the dev server |
+| `bun run build` | Create a production build |
+| `bun run start` | Run the production server |
+| `bun run lint` | Run ESLint |
+| `bun run analyze` | Build with bundle analyzer enabled |
+| `bun run lighthouse` | Run the local Lighthouse helper script |
 
 ## Project Structure
 

@@ -11,11 +11,10 @@ async function run(cmd, args, opts = {}) {
 
 ;(async () => {
   try {
-    await run('npx', ['-y', 'lighthouse', 'http://localhost:3000', '--preset=desktop', '--output=json', '--output-path=./.lighthouse/report.json'])
+    await run('bunx', ['lighthouse', 'http://localhost:3000', '--preset=desktop', '--output=json', '--output-path=./.lighthouse/report.json'])
   } catch (e) {
     console.error(e)
     process.exit(1)
   }
 })()
-
 

@@ -24,6 +24,7 @@ dist/
 npm-debug.log*
 yarn-debug.log*
 pnpm-debug.log*
+bun-debug.log*
 lerna-debug.log*
 
 # Runtime
@@ -35,6 +36,7 @@ pids
 .nyc_output
 .eslintcache
 .stylelintcache
+.lighthouse/
 .rpt2_cache/
 .rts2_cache_*/
 .cache
