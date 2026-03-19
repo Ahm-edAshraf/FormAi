@@ -10,7 +10,11 @@
     "start": "next start",
     "analyze": "ANALYZE=1 next build",
     "lighthouse": "bun scripts/run-lighthouse.cjs",
-    "test:tooling": "bun test tests/tooling/bun-scripts.test.ts"
+    "test": "bun run test:all",
+    "test:unit": "vitest run",
+    "test:e2e": "playwright test",
+    "test:all": "bun run test:tooling && bun run test:unit && bun run test:e2e",
+    "test:tooling": "vitest run --config vitest.tooling.config.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "latest",
@@ -76,13 +80,21 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "^22",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@vitejs/plugin-react": "^6.0.1",
+    "@vitest/coverage-v8": "^4.1.0",
     "eslint": "^8.57.1",
     "eslint-config-next": "14.2.16",
+    "jsdom": "^29.0.0",
     "postcss": "^8.5",
+    "start-server-and-test": "^2.1.5",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.0"
   }
 }

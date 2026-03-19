@@ -200,6 +200,9 @@ stripe listen --forward-to http://localhost:3000/api/stripe/webhook
 | `bun run build` | Create a production build |
 | `bun run start` | Run the production server |
 | `bun run lint` | Run ESLint |
+| `bun run test:unit` | Run the Vitest smoke suite |
+| `bun run test:e2e` | Run the Playwright smoke suite |
+| `bun run test:all` | Run tooling, unit, and e2e checks |
 | `bun run analyze` | Build with bundle analyzer enabled |
 | `bun run lighthouse` | Run the local Lighthouse helper script |
 
