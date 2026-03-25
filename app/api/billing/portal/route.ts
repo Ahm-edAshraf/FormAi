@@ -1,3 +1,4 @@
+import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import Stripe from 'stripe'
@@ -9,15 +10,16 @@ const stripe = stripeSecretKey ? new Stripe(stripeSecretKey, { apiVersion: '2025
 export async function POST(request: Request) {
   try {
     if (!stripe) return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 })
+    const { userId } = await auth()
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const cookieStore = cookies()
     const supabase = createSupabaseServer(cookieStore)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { data: profile } = await supabase
       .from('profiles')
       .select('stripe_customer_id')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .single()
     const stripeCustomerId = (profile as any)?.stripe_customer_id as string | null | undefined
     if (!stripeCustomerId) return NextResponse.json({ error: 'No Stripe customer' }, { status: 400 })
@@ -37,5 +39,4 @@ export async function POST(request: Request) {
 }
 
 export const runtime = 'nodejs'
-
 

@@ -1,6 +1,8 @@
+import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createClient as createSupabaseServer } from '@/utils/supabase/server'
+import { isClerkConfigured } from '@/lib/clerk'
 
 export async function POST(
   request: Request,
@@ -11,7 +13,8 @@ export async function POST(
     // Track slug for redirecting back to public page on any error (handled via _currentSlug from DB)
     const cookieStore = cookies()
     const supabase = createSupabaseServer(cookieStore)
-    const { data: { user } } = await supabase.auth.getUser()
+    const authState = isClerkConfigured() ? await auth() : { userId: null }
+    const userId = authState.userId
     const formId = params.id
 
     const { data: form, error: formErr } = await supabase
@@ -136,13 +139,13 @@ export async function POST(
         .from('submissions')
         .select('id', { count: 'exact', head: true })
         .eq('form_id', formId)
-        .or(`user_id.eq.${user?.id ?? ''},visitor_token.eq.${visitor}`)
+        .or(`user_id.eq.${userId ?? ''},visitor_token.eq.${visitor}`)
       if ((count ?? 0) > 0) return NextResponse.redirect(new URL(`/f/${form.slug}?error=already_submitted`, request.url), { status: 303 })
     }
 
     const { error: insErr } = await supabase
       .from('submissions')
-      .insert({ form_id: formId, data: entries, user_id: user?.id ?? null, visitor_token: visitor })
+      .insert({ form_id: formId, data: entries, user_id: userId ?? null, visitor_token: visitor })
     if (insErr) throw insErr
 
     // Log submission event for owner monthly usage caps independent of deletes
@@ -177,5 +180,4 @@ export async function POST(
     }
   }
 }
-
 

@@ -1,3 +1,4 @@
+import { auth, currentUser } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import Stripe from 'stripe'
@@ -23,30 +24,32 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 })
     }
 
+    const { userId } = await auth()
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const user = await currentUser()
+
     const cookieStore = cookies()
     const supabase = createSupabaseServer(cookieStore)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     // Ensure we have a Stripe customer id on profile
     const { data: profile } = await supabase
       .from('profiles')
       .select('stripe_customer_id')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .single()
 
     let stripeCustomerId = (profile as any)?.stripe_customer_id as string | null | undefined
     if (!stripeCustomerId) {
       const customer = await stripe.customers.create({
-        email: user.email ?? undefined,
-        metadata: { user_id: user.id },
+        email: user?.primaryEmailAddress?.emailAddress ?? undefined,
+        metadata: { user_id: userId },
       })
       stripeCustomerId = customer.id
       // Persist the customer id on profile
       await supabase
         .from('profiles')
         .update({ stripe_customer_id: stripeCustomerId })
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
     }
 
     const url = new URL(request.url)
@@ -58,8 +61,8 @@ export async function POST(request: Request) {
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${origin}/billing?success=1`,
       cancel_url: `${origin}/billing?canceled=1`,
-      client_reference_id: user.id,
-      metadata: { user_id: user.id },
+      client_reference_id: userId,
+      metadata: { user_id: userId },
     })
 
     return NextResponse.json({ url: session.url })
@@ -69,5 +72,4 @@ export async function POST(request: Request) {
 }
 
 export const runtime = 'nodejs'
-
 

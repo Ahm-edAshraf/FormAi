@@ -1,5 +1,6 @@
 'use client'
 
+import { useAuth } from '@clerk/nextjs'
 import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/core'
@@ -20,7 +21,6 @@ import { useToast } from '@/hooks/use-toast'
 import { useRouter } from 'next/navigation'
 import { MobileNav } from '@/components/mobile-nav'
 import { fetchFormWithFields as fetchFormWithFieldsClient, saveFields, saveFormMeta } from '@/lib/data/forms.client'
-import { createClient as createSupabaseBrowser } from '@/utils/supabase/client'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { useEffect as ReactUseEffect } from 'react'
 
@@ -44,6 +44,7 @@ export function FormEditor({ formId }: FormEditorProps) {
   const [rightOpen, setRightOpen] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
+  const { userId } = useAuth()
 
   // Prefer mobile preview on small screens by default
   useEffect(() => {
@@ -57,13 +58,8 @@ export function FormEditor({ formId }: FormEditorProps) {
     let mounted = true
     ;(async () => {
       try {
-        const supabase = createSupabaseBrowser()
-        const [{ data: userData }, { form, fields }] = await Promise.all([
-          supabase.auth.getUser(),
-          fetchFormWithFieldsClient(formId),
-        ])
+        const { form, fields } = await fetchFormWithFieldsClient(formId)
         if (!mounted) return
-        const userId = userData?.user?.id
         if (!userId) {
           toast({ title: 'Please sign in', description: 'You must be signed in to edit forms.' })
           router.replace('/dashboard')
@@ -87,7 +83,7 @@ export function FormEditor({ formId }: FormEditorProps) {
       }
     })()
     return () => { mounted = false }
-  }, [formId, router, toast])
+  }, [formId, router, toast, userId])
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event

@@ -1,3 +1,4 @@
+import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import { getGeminiClient } from '@/lib/gemini'
 import { cookies } from 'next/headers'
@@ -13,16 +14,17 @@ export async function POST(request: Request) {
     }
 
     // Enforce plan limits: free users max 10 AI generations/day
+    const { userId } = await auth()
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const cookieStore = cookies()
     const supabase = createSupabaseServer(cookieStore)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    const { data: profile } = await supabase.from('profiles').select('plan').eq('user_id', user.id).single()
+    const { data: profile } = await supabase.from('profiles').select('plan').eq('user_id', userId).single()
     if ((profile?.plan ?? 'free') === 'free') {
       const { count } = await supabase
         .from('ai_generations')
         .select('id', { count: 'exact', head: true })
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
       if ((count ?? 0) >= 10) {
         return NextResponse.json({ error: 'Daily AI generation limit reached. Upgrade to Pro.' }, { status: 429 })
@@ -85,7 +87,7 @@ export async function POST(request: Request) {
     }
 
     // Log generation for usage tracking
-    await supabase.from('ai_generations').insert({ user_id: user.id, description })
+    await supabase.from('ai_generations').insert({ user_id: userId, description })
 
     return NextResponse.json({ spec: parsed.data })
   } catch (err: any) {
@@ -93,5 +95,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: err?.message ?? 'Server error' }, { status: 500 })
   }
 }
-
 

@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 let mockUser: { id: string } | null = null
 let mockPublicForm: Record<string, unknown> | null = null
+let authState: { userId: string | null } = { userId: null }
 const redirect = vi.fn()
 
 function createQueryResult() {
@@ -24,6 +25,10 @@ vi.mock('next/headers', () => ({
 
 vi.mock('next/navigation', () => ({
   redirect,
+}))
+
+vi.mock('@clerk/nextjs/server', () => ({
+  auth: async () => authState,
 }))
 
 vi.mock('next/cache', () => ({
@@ -138,6 +143,7 @@ vi.mock('../../app/f/[slug]/ToastEffect', () => ({
 describe('route smoke coverage', () => {
   it('executes the home page route without redirecting signed-out users', async () => {
     mockUser = null
+    authState = { userId: null }
     redirect.mockClear()
 
     const mod = await import('../../app/page')
@@ -149,10 +155,13 @@ describe('route smoke coverage', () => {
 
   it('executes the dashboard route for signed-out users', async () => {
     mockUser = null
+    authState = { userId: null }
+    redirect.mockClear()
 
     const mod = await import('../../app/dashboard/page')
     const result = await mod.default()
 
+    expect(redirect).toHaveBeenCalledWith('/sign-in')
     expect(result).toBeTruthy()
   })
 

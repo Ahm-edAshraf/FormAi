@@ -4,14 +4,19 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { ClerkNotConfigured } from '@/components/clerk-not-configured'
 import Link from 'next/link'
 import { MobileNav } from '@/components/mobile-nav'
 import { BarChart3, Download, Eye, Users, Zap, ArrowLeft, Sparkles, FileDown } from 'lucide-react'
+import { getCurrentUserId } from '@/lib/auth'
 
 export default async function AnalyticsPage() {
   const supabase = createSupabaseServer(cookies())
-  const { data: userData } = await supabase.auth.getUser()
-  const userId = userData?.user?.id
+  const userId = await getCurrentUserId()
+
+  if (!userId) {
+    return <ClerkNotConfigured title="Analytics auth is not configured yet" />
+  }
 
   let totals = { forms: 0, submissions: 0, views: 0 }
   let forms: any[] = []
@@ -86,5 +91,3 @@ export default async function AnalyticsPage() {
     </div>
   )
 }
-
-

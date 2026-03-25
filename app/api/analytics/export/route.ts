@@ -1,3 +1,4 @@
+import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createClient as createSupabaseServer } from '@/utils/supabase/server'
@@ -22,11 +23,11 @@ export async function GET(request: Request) {
     const url = new URL(request.url)
     const formId = url.searchParams.get('formId')
     const formIdsParam = url.searchParams.get('formIds')
+    const { userId } = await auth()
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const cookieStore = cookies()
     const supabase = createSupabaseServer(cookieStore)
-    const { data: userData } = await supabase.auth.getUser()
-    const userId = userData?.user?.id
-    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     // Determine scope
     let formIds: string[] = []
@@ -97,5 +98,4 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: err?.message ?? 'Export failed' }, { status: 500 })
   }
 }
-
 

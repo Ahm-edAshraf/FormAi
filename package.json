@@ -17,6 +17,7 @@
     "test:tooling": "vitest run --config vitest.tooling.config.ts"
   },
   "dependencies": {
+    "@clerk/nextjs": "6.10.6",
     "@dnd-kit/core": "latest",
     "@dnd-kit/sortable": "latest",
     "@dnd-kit/utilities": "^3.2.2",

@@ -1,3 +1,4 @@
+import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import { revalidateTag } from 'next/cache'
 import { cookies } from 'next/headers'
@@ -10,10 +11,11 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
+    const { userId } = await auth()
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const cookieStore = cookies()
     const supabase = createSupabaseServer(cookieStore)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const formId = params.id
     // Owner check
@@ -23,7 +25,7 @@ export async function POST(
       .eq('id', formId)
       .single()
     if (formErr) throw formErr
-    if (form.user_id !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if (form.user_id !== userId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const body = await request.json().catch(() => null)
     const fields = Array.isArray(body?.fields) ? body.fields : []
@@ -107,5 +109,4 @@ export async function POST(
     return NextResponse.json({ error: err?.message ?? 'Server error' }, { status: 500 })
   }
 }
-
 

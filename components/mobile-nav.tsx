@@ -1,18 +1,17 @@
 'use client'
 
+import { useClerk } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { Menu, LogOut, Crown, BarChart3, Settings, Home } from 'lucide-react'
-import { createClient as createSupabaseBrowser } from '@/utils/supabase/client'
 
 export function MobileNav() {
   const router = useRouter()
+  const clerk = useClerk()
 
   const handleLogout = async () => {
-    const supabase = createSupabaseBrowser()
-    await supabase.auth.signOut()
-    router.push('/')
+    await clerk.signOut({ redirectUrl: '/' })
   }
 
   return (
@@ -45,5 +44,4 @@ export function MobileNav() {
     </Sheet>
   )
 }
-
 

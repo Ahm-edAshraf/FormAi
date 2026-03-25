@@ -9,6 +9,6 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
-    include: ['tests/tooling/**/*.test.ts'],
+    include: ['tests/tooling/**/*.test.{ts,tsx}'],
   },
 })

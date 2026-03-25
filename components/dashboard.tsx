@@ -1,5 +1,6 @@
 'use client'
 
+import { useAuth, useClerk } from '@clerk/nextjs'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
@@ -25,6 +26,8 @@ export function Dashboard({ initialRows, initialTotals }: { initialRows?: any[];
   const { toast } = useToast()
   const isMobile = useIsMobile()
   const router = useRouter()
+  const clerk = useClerk()
+  const { userId } = useAuth()
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQuery(searchQuery), 250)
@@ -54,8 +57,6 @@ export function Dashboard({ initialRows, initialTotals }: { initialRows?: any[];
       try {
         setLoading(true)
         const supabase = createSupabaseBrowser()
-        const { data: userData } = await supabase.auth.getUser()
-        const userId = userData?.user?.id
         if (!userId) {
           toast({ title: 'Please sign in', description: 'Sign in to view your dashboard.' })
           return
@@ -109,7 +110,7 @@ export function Dashboard({ initialRows, initialTotals }: { initialRows?: any[];
         setLoading(false)
       }
     })()
-  }, [toast, initialRows])
+  }, [toast, initialRows, userId])
 
   const usage = useMemo(() => ({
     formsUsed: totals.totalForms,
@@ -151,12 +152,7 @@ export function Dashboard({ initialRows, initialTotals }: { initialRows?: any[];
                 variant="ghost"
                 className="text-white"
                 onClick={async () => {
-                  try {
-                    const supabase = createSupabaseBrowser()
-                    await supabase.auth.signOut()
-                  } finally {
-                    router.push('/')
-                  }
+                  await clerk.signOut({ redirectUrl: '/' })
                 }}
               >
                 <LogOut className="w-4 h-4 mr-2" />

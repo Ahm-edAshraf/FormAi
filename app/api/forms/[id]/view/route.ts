@@ -1,6 +1,8 @@
+import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createClient as createSupabaseServer } from '@/utils/supabase/server'
+import { isClerkConfigured } from '@/lib/clerk'
 
 export async function POST(
   request: Request,
@@ -9,14 +11,14 @@ export async function POST(
   try {
     const cookieStore = cookies()
     const supabase = createSupabaseServer(cookieStore)
-    const { data: userData } = await supabase.auth.getUser()
+    const authState = isClerkConfigured() ? await auth() : { userId: null }
     const cookieName = `v_${params.id}`
     let visitor = cookieStore.get(cookieName)?.value
     if (!visitor) visitor = crypto.randomUUID()
 
     await supabase.from('form_views').insert({
       form_id: params.id,
-      user_id: userData?.user?.id ?? null,
+      user_id: authState.userId ?? null,
       visitor_token: visitor,
     })
 
@@ -31,5 +33,4 @@ export async function POST(
 
 export const runtime = 'edge'
 export const preferredRegion = 'auto'
-
 

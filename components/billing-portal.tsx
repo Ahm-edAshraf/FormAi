@@ -1,5 +1,6 @@
 'use client'
 
+import { useAuth } from '@clerk/nextjs'
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -21,12 +22,11 @@ import { MobileNav } from '@/components/mobile-nav'
 export function BillingPortal() {
   const [currentPlan, setCurrentPlan] = useState<'free' | 'pro'>('free')
   const [invoices, setInvoices] = useState<any[]>([])
+  const { userId } = useAuth()
 
   useEffect(() => {
     ;(async () => {
       const supabase = createSupabaseBrowser()
-      const { data: userData } = await supabase.auth.getUser()
-      const userId = userData?.user?.id
       if (!userId) return
       // If returning from checkout (success=1), attempt a background sync to pull latest subscription status
       try {
@@ -44,7 +44,7 @@ export function BillingPortal() {
         setInvoices(Array.isArray(body.invoices) ? body.invoices : [])
       } catch {}
     })()
-  }, [])
+  }, [userId])
 
   const plans = [
     {

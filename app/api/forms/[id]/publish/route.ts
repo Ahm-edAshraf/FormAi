@@ -1,3 +1,4 @@
+import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import { revalidateTag } from 'next/cache'
 import { cookies } from 'next/headers'
@@ -10,10 +11,11 @@ export async function POST(
 ) {
   try {
     const { slug: desired } = await request.json().catch(() => ({}))
+    const { userId } = await auth()
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const cookieStore = cookies()
     const supabase = createSupabaseServer(cookieStore)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { data: form, error: formErr } = await supabase
       .from('forms')
@@ -21,7 +23,7 @@ export async function POST(
       .eq('id', params.id)
       .single()
     if (formErr) throw formErr
-    if (form.user_id !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if (form.user_id !== userId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const base = slugify(desired || form.title)
     // ensure unique slug
@@ -50,11 +52,10 @@ export async function POST(
     // Revalidate cached public page and data
     revalidateTag(`form:slug:${slug}`)
     // keep dashboard fresh for the owner
-    revalidateTag(`dashboard:user:${user.id}`)
+    revalidateTag(`dashboard:user:${userId}`)
     return NextResponse.json({ slug })
   } catch (err: any) {
     return NextResponse.json({ error: err?.message ?? 'Server error' }, { status: 500 })
   }
 }
-
 

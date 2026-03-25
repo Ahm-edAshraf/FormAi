@@ -1,5 +1,6 @@
 'use client'
 
+import { useAuth, useClerk, useUser } from '@clerk/nextjs'
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -34,17 +35,19 @@ export function AccountSettings() {
   const [dndTo, setDndTo] = useState('08:00')
   const [twoFactor, setTwoFactor] = useState(false)
   const { toast } = useToast()
+  const { userId } = useAuth()
+  const { user } = useUser()
+  const clerk = useClerk()
 
   useEffect(() => {
     ;(async () => {
+      if (!userId) return
       const supabase = createSupabaseBrowser()
-      const { data: userData } = await supabase.auth.getUser()
-      if (!userData?.user) return
-      setEmail(userData.user.email ?? '')
-      setLastSignInAt(userData.user.last_sign_in_at ?? null)
+      setEmail(user?.primaryEmailAddress?.emailAddress ?? '')
+      setLastSignInAt(user?.lastSignInAt ? new Date(user.lastSignInAt).toISOString() : null)
       // Client-only user agent details
       setUserAgent(`${navigator.platform} • ${navigator.userAgent}`)
-      const { data: profile } = await supabase.from('profiles').select('*').eq('user_id', userData.user.id).single()
+      const { data: profile } = await supabase.from('profiles').select('*').eq('user_id', userId).single()
       if (profile) {
         setFirstName(profile.first_name ?? '')
         setLastName(profile.last_name ?? '')
@@ -59,13 +62,12 @@ export function AccountSettings() {
         setTwoFactor(profile.two_factor_enabled ?? false)
       }
     })()
-  }, [])
+  }, [user, userId])
 
   const handleSave = async () => {
     try {
+      if (!userId) return
       const supabase = createSupabaseBrowser()
-      const { data: userData } = await supabase.auth.getUser()
-      if (!userData?.user) return
       const updates = {
         first_name: firstName,
         last_name: lastName,
@@ -79,7 +81,7 @@ export function AccountSettings() {
         dnd_to: dndTo,
         two_factor_enabled: twoFactor,
       }
-      const { error } = await supabase.from('profiles').update(updates).eq('user_id', userData.user.id)
+      const { error } = await supabase.from('profiles').update(updates).eq('user_id', userId)
       if (error) throw error
       toast({ title: 'Settings saved' })
     } catch (err: any) {
@@ -210,10 +212,9 @@ export function AccountSettings() {
                       </div>
                       <Switch checked={twoFactor} onCheckedChange={async (checked) => {
                         setTwoFactor(checked)
+                        if (!userId) return
                         const supabase = createSupabaseBrowser()
-                        const { data: userData } = await supabase.auth.getUser()
-                        if (!userData?.user) return
-                        await supabase.from('profiles').update({ two_factor_enabled: checked }).eq('user_id', userData.user.id)
+                        await supabase.from('profiles').update({ two_factor_enabled: checked }).eq('user_id', userId)
                       }} />
                     </div>
                   </div>
@@ -240,9 +241,7 @@ export function AccountSettings() {
                           size="sm"
                           className="border-slate-600 text-white"
                           onClick={async () => {
-                            const supabase = createSupabaseBrowser()
-                            await supabase.auth.signOut()
-                            window.location.href = '/'
+                            await clerk.signOut({ redirectUrl: '/' })
                           }}
                         >
                           Sign out of this device

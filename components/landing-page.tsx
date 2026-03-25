@@ -1,21 +1,18 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Sparkles, Zap, BarChart3, Shield, ArrowRight, Check, Star } from 'lucide-react'
 import dynamic from 'next/dynamic'
-const AuthModal = dynamic(() => import('@/components/auth-modal').then(m => m.AuthModal), { ssr: false })
 const AIDemo = dynamic(() => import('@/components/ai-demo').then(m => m.AIDemo), { ssr: false })
 import { useToast } from '@/hooks/use-toast'
 import { useIsMobile } from '@/hooks/use-mobile'
 
 export function LandingPage() {
-  const [showAuthModal, setShowAuthModal] = useState(false)
-  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signup')
   const [demoKey, setDemoKey] = useState(0)
   const { toast } = useToast()
   const isMobile = useIsMobile()
@@ -104,25 +101,14 @@ export function LandingPage() {
           </motion.div>
           
           <div className="flex items-center space-x-2 md:space-x-4">
-            <Button 
-              variant="ghost" 
-              className=""
-              onClick={() => {
-                setAuthMode('signin')
-                setShowAuthModal(true)
-              }}
-            >
-              Sign In
+            <Button variant="ghost" asChild>
+              <Link href="/sign-in">Sign In</Link>
             </Button>
-            <Button 
-              className="glow-effect bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-              onClick={() => {
-                setAuthMode('signup')
-                setShowAuthModal(true)
-              }}
-            >
-              Get Started
-              <ArrowRight className="w-4 h-4 ml-2" />
+            <Button asChild className="glow-effect bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+              <Link href="/sign-up">
+                Get Started
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Link>
             </Button>
           </div>
         </div>
@@ -166,16 +152,11 @@ export function LandingPage() {
             transition={{ delay: 0.6 }}
             className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center items-center"
           >
-             <Button 
-              size="lg"
-              className="glow-effect bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-lg px-8 py-6"
-              onClick={() => {
-                setAuthMode('signup')
-                setShowAuthModal(true)
-              }}
-            >
-              Start Building for Free
-              <ArrowRight className="w-5 h-5 ml-2" />
+             <Button asChild size="lg" className="glow-effect bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-lg px-8 py-6">
+              <Link href="/sign-up">
+                Start Building for Free
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Link>
             </Button>
             <Button 
               size="lg" 
@@ -294,19 +275,13 @@ export function LandingPage() {
                       ))}
                     </ul>
                     
-                      <Button 
-                        className={`w-full ${
+                      <Button asChild className={`w-full ${
                         plan.popular
                           ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700'
                           : 'bg-slate-700 hover:bg-slate-600'
-                      }`}
-                      onClick={() => {
-                        setAuthMode('signup')
-                        setShowAuthModal(true)
-                      }}
-                    >
-                      Get Started
-                    </Button>
+                      }`}>
+                        <Link href="/sign-up">Get Started</Link>
+                      </Button>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -314,13 +289,6 @@ export function LandingPage() {
           </div>
         </div>
       </section>
-
-      <AuthModal 
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        mode={authMode}
-        onModeChange={setAuthMode}
-      />
     </div>
   )
 }
