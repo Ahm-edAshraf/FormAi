@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { ClerkProvider } from '@clerk/nextjs'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import { ConvexClientProvider } from '@/components/convex-client-provider'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/toaster'
 import { SiteFooter } from '@/components/site-footer'
@@ -40,7 +41,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={inter.className}>
-        {isClerkConfigured() ? <ClerkProvider>{content}</ClerkProvider> : content}
+        {isClerkConfigured() ? <ClerkProvider><ConvexClientProvider>{content}</ConvexClientProvider></ClerkProvider> : content}
       </body>
     </html>
   )
