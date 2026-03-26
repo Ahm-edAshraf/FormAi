@@ -1,5 +1,6 @@
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
+import { DEFAULT_FORM_SUCCESS_MESSAGE } from "../../lib/forms/constants";
 import { requireActiveWorkspace, requireCurrentUser, requireWorkspaceAccess } from "./auth";
 
 type FormAccessCtx = QueryCtx | MutationCtx;
@@ -117,6 +118,7 @@ export async function createBlankFormRecord(
     workspaceId: workspace._id,
     title,
     description: "",
+    successMessage: DEFAULT_FORM_SUCCESS_MESSAGE,
     slug,
     status: "draft",
     visibility: "workspace",

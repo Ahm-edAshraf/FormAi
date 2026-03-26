@@ -2,6 +2,7 @@ import { v } from "convex/values";
 
 import { MAX_FORM_FIELDS } from "../lib/forms/constants";
 import { mutation, query } from "./_generated/server";
+import { getSessionById, incrementDailyStats } from "./lib/analytics";
 import { requireCurrentUser } from "./lib/auth";
 import { normalizeFormSlug, requireFormAccess } from "./lib/forms";
 import { toPublishedField } from "./lib/formRuntime";
@@ -36,6 +37,7 @@ export const publish = mutation({
       source: "builder",
       title: form.title,
       description: form.description,
+      successMessage: form.successMessage,
       slug: form.slug,
       fields: fields.map(toPublishedField),
       theme: {},
@@ -102,6 +104,7 @@ export const getPublicBySlug = query({
 export const trackPublicView = mutation({
   args: {
     snapshotId: v.id("formSnapshots"),
+    sessionId: v.string(),
   },
   handler: async (ctx, args) => {
     const snapshot = await ctx.db.get(args.snapshotId);
@@ -121,11 +124,32 @@ export const trackPublicView = mutation({
       throw new Error("Published form not found");
     }
 
-    await ctx.db.patch(form._id, {
-      viewCount: form.viewCount + 1,
-      updatedAt: Date.now(),
-    });
+    const now = Date.now();
+    const existingSession = await getSessionById(ctx, form._id, args.sessionId);
 
-    return { formId: form._id, viewCount: form.viewCount + 1 };
+    if (!existingSession) {
+      await ctx.db.insert("submissionSessions", {
+        formId: form._id,
+        snapshotId: snapshot._id,
+        sessionId: args.sessionId,
+        viewedAt: now,
+        startedAt: null,
+        submittedAt: null,
+      });
+
+      await ctx.db.patch(form._id, {
+        viewCount: form.viewCount + 1,
+        updatedAt: now,
+      });
+      await incrementDailyStats(ctx, form._id, now, { viewCount: 1 });
+
+      return { formId: form._id, viewCount: form.viewCount + 1 };
+    }
+
+    if (existingSession.viewedAt === null) {
+      await ctx.db.patch(existingSession._id, { viewedAt: now });
+    }
+
+    return { formId: form._id, viewCount: form.viewCount };
   },
 });

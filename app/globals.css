@@ -141,5 +141,26 @@
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-b from-white to-white/50;
   }
+
+  /* FormAI app shell — consistent focus + surfaces (dark UI) */
+  .app-focus {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/90 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505];
+  }
+
+  .surface-panel {
+    @apply rounded-2xl border border-white/10 bg-[#0A0A0A];
+  }
+
+  .msg-success {
+    @apply rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200;
+  }
+
+  .msg-error {
+    @apply rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-200;
+  }
+
+  .msg-warning {
+    @apply rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-200;
+  }
 }
 

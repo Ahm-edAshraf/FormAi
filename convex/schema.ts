@@ -40,6 +40,7 @@ export default defineSchema({
     workspaceId: v.id("workspaces"),
     title: v.string(),
     description: v.string(),
+    successMessage: v.optional(v.string()),
     slug: v.string(),
     status: v.union(
       v.literal("draft"),
@@ -109,6 +110,7 @@ export default defineSchema({
     source: v.string(),
     title: v.string(),
     description: v.string(),
+    successMessage: v.optional(v.string()),
     slug: v.string(),
     fields: v.array(publishedFieldValidator),
     theme: v.object({}),
@@ -127,6 +129,26 @@ export default defineSchema({
   })
     .index("by_formId_and_submittedAt", ["formId", "submittedAt"])
     .index("by_snapshotId_and_submittedAt", ["snapshotId", "submittedAt"]),
+
+  submissionSessions: defineTable({
+    formId: v.id("forms"),
+    snapshotId: v.id("formSnapshots"),
+    sessionId: v.string(),
+    viewedAt: v.union(v.number(), v.null()),
+    startedAt: v.union(v.number(), v.null()),
+    submittedAt: v.union(v.number(), v.null()),
+  })
+    .index("by_formId_and_sessionId", ["formId", "sessionId"])
+    .index("by_formId_and_startedAt", ["formId", "startedAt"])
+    .index("by_formId_and_submittedAt", ["formId", "submittedAt"]),
+
+  formDailyStats: defineTable({
+    formId: v.id("forms"),
+    dateKey: v.string(),
+    viewCount: v.number(),
+    startCount: v.number(),
+    submissionCount: v.number(),
+  }).index("by_formId_and_dateKey", ["formId", "dateKey"]),
 
   aiGenerationJobs: defineTable({
     workspaceId: v.id("workspaces"),

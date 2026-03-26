@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 
 import {
+  DEFAULT_FORM_SUCCESS_MESSAGE,
   DEFAULT_FORM_TITLE,
   MAX_DASHBOARD_FORMS,
   MAX_FORM_FIELDS,
@@ -54,6 +55,7 @@ export const updateDraft = mutation({
     clerkOrgId: v.union(v.string(), v.null()),
     title: v.optional(v.string()),
     description: v.optional(v.string()),
+    successMessage: v.optional(v.string()),
     slug: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -61,10 +63,12 @@ export const updateDraft = mutation({
     const user = await requireCurrentUser(ctx);
     const nextTitle = args.title?.trim();
     const nextDescription = args.description?.trim();
+    const nextSuccessMessage = args.successMessage?.trim();
     const nextSlug = args.slug?.trim();
     const patch: {
       title?: string;
       description?: string;
+      successMessage?: string;
       slug?: string;
       updatedAt?: number;
       updatedBy?: typeof user._id;
@@ -76,6 +80,10 @@ export const updateDraft = mutation({
 
     if (nextDescription !== undefined) {
       patch.description = nextDescription;
+    }
+
+    if (nextSuccessMessage !== undefined) {
+      patch.successMessage = nextSuccessMessage || DEFAULT_FORM_SUCCESS_MESSAGE;
     }
 
     if (nextSlug !== undefined) {
@@ -134,9 +142,10 @@ export const getDashboardData = query({
         q.eq("workspaceId", workspace._id),
       )
       .order("desc")
-      .take(MAX_DASHBOARD_FORMS);
+      .take(MAX_DASHBOARD_FORMS * 3);
+    const visibleForms = forms.filter((form) => form.status !== "archived").slice(0, MAX_DASHBOARD_FORMS);
 
-    const stats = forms.reduce(
+    const stats = visibleForms.reduce(
       (accumulator, form) => {
         accumulator.totalForms += 1;
         accumulator.totalSubmissions += form.submissionCount;
@@ -161,12 +170,75 @@ export const getDashboardData = query({
       },
     );
 
-    return {
-      workspace,
-      forms,
-      stats,
-      hasMore: forms.length === MAX_DASHBOARD_FORMS,
-    };
+      return {
+        workspace,
+        forms: visibleForms,
+        stats,
+        hasMore: visibleForms.length === MAX_DASHBOARD_FORMS,
+      };
+    },
+});
+
+export const deleteForm = mutation({
+  args: {
+    formId: v.id("forms"),
+    clerkOrgId: v.union(v.string(), v.null()),
+  },
+  handler: async (ctx, args) => {
+    const form = await requireFormAccess(ctx, args.formId, args.clerkOrgId);
+
+    const fields = await ctx.db
+      .query("formFields")
+      .withIndex("by_formId_and_order", (q) => q.eq("formId", form._id))
+      .take(MAX_FORM_FIELDS);
+
+    for (const field of fields) {
+      await ctx.db.delete(field._id);
+    }
+
+    const snapshots = await ctx.db
+      .query("formSnapshots")
+      .withIndex("by_formId_and_version", (q) => q.eq("formId", form._id))
+      .take(MAX_FORM_FIELDS);
+    for (const snapshot of snapshots) {
+      await ctx.db.delete(snapshot._id);
+    }
+
+    const submissions = await ctx.db
+      .query("submissions")
+      .withIndex("by_formId_and_submittedAt", (q) => q.eq("formId", form._id))
+      .take(1000);
+    for (const submission of submissions) {
+      await ctx.db.delete(submission._id);
+    }
+
+    const sessions = await ctx.db
+      .query("submissionSessions")
+      .withIndex("by_formId_and_startedAt", (q) => q.eq("formId", form._id))
+      .take(1000);
+    for (const session of sessions) {
+      await ctx.db.delete(session._id);
+    }
+
+    const dailyStats = await ctx.db
+      .query("formDailyStats")
+      .withIndex("by_formId_and_dateKey", (q) => q.eq("formId", form._id))
+      .take(400);
+    for (const row of dailyStats) {
+      await ctx.db.delete(row._id);
+    }
+
+    const jobs = await ctx.db
+      .query("aiGenerationJobs")
+      .withIndex("by_formId", (q) => q.eq("formId", form._id))
+      .take(200);
+    for (const job of jobs) {
+      await ctx.db.delete(job._id);
+    }
+
+    await ctx.db.delete(form._id);
+
+    return { formId: form._id };
   },
 });
 

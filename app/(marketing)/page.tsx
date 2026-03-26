@@ -1,6 +1,8 @@
 import { ArrowRight, Blocks, Shield, Sparkles, Terminal, Zap } from "lucide-react";
 import Link from "next/link";
 
+import { MarketingHeader } from "./marketing-header";
+
 const features = [
   {
     icon: <Sparkles className="h-5 w-5 text-indigo-400" />,
@@ -31,35 +33,7 @@ export default function MarketingPage() {
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_10%,transparent_100%)]" />
       </div>
 
-      {/* Header */}
-      <header className="relative z-10 flex items-center justify-between px-6 py-6 max-w-7xl mx-auto">
-        <div className="flex items-center gap-3">
-          <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-b from-indigo-500 to-blue-600 shadow-[0_0_20px_rgba(99,102,241,0.4)]">
-            <div className="absolute inset-[1px] rounded-[11px] bg-[#050505] flex items-center justify-center">
-              <Sparkles className="h-5 w-5 text-indigo-400" />
-            </div>
-          </div>
-          <span className="font-bold text-xl tracking-tight text-white">FormAI</span>
-        </div>
-        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
-          <Link href="#features" className="hover:text-white transition-colors">Features</Link>
-          <Link href="#how-it-works" className="hover:text-white transition-colors">How it works</Link>
-          <Link href="#pricing" className="hover:text-white transition-colors">Pricing</Link>
-        </nav>
-        <div className="flex items-center gap-4">
-          <Link href="/sign-in" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
-            Sign in
-          </Link>
-          <Link 
-            href="/dashboard" 
-            className="group relative inline-flex h-10 items-center justify-center overflow-hidden rounded-full bg-white px-6 font-medium text-black transition-all hover:scale-105"
-          >
-            <span className="relative z-10 flex items-center gap-2">
-              Get Started <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </span>
-          </Link>
-        </div>
-      </header>
+      <MarketingHeader />
 
       {/* Hero Section */}
       <section className="relative z-10 pt-32 pb-20 px-6 max-w-7xl mx-auto text-center">
@@ -89,17 +63,23 @@ export default function MarketingPage() {
               Start building for free <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </span>
           </Link>
-          <Link 
-            href="#demo" 
-            className="inline-flex h-14 items-center justify-center rounded-full border border-white/10 bg-white/5 px-8 text-base font-medium text-white backdrop-blur-md transition-colors hover:bg-white/10"
+          <Link
+            href="#how-it-works"
+            className="app-focus inline-flex h-14 items-center justify-center rounded-full border border-white/10 bg-white/5 px-8 text-base font-medium text-white backdrop-blur-md transition-colors hover:bg-white/10"
           >
-            View Demo
+            View demo
           </Link>
         </div>
       </section>
 
       {/* Interactive Terminal Showcase */}
-      <section className="relative z-10 max-w-5xl mx-auto px-6 pb-32">
+      <section id="how-it-works" className="relative z-10 max-w-5xl mx-auto px-6 pb-32">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-5xl font-bold text-white mb-4 tracking-tight">How it works</h2>
+          <p className="text-slate-400 max-w-2xl mx-auto text-lg">
+            From prompt to production in three simple steps.
+          </p>
+        </div>
         <div className="relative rounded-2xl border border-white/10 bg-[#0A0A0A]/80 backdrop-blur-2xl shadow-2xl overflow-hidden">
           {/* Terminal Header */}
           <div className="flex items-center px-4 py-3 border-b border-white/10 bg-white/[0.02]">
@@ -118,7 +98,7 @@ export default function MarketingPage() {
           <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-white/10">
             <div className="p-6 md:p-8 space-y-6">
               <div>
-                <p className="text-xs font-mono text-indigo-400 mb-2 uppercase tracking-wider">Input Prompt</p>
+                <p className="text-xs font-mono text-indigo-400 mb-2 uppercase tracking-wider">Step 1: Input Prompt</p>
                 <div className="p-4 rounded-xl bg-white/5 border border-white/5 text-sm text-slate-300 leading-relaxed">
                   &quot;I need a feedback form for our new SaaS product. Ask for their role, what they liked most, what was confusing, and a 1-10 rating of the overall experience.&quot;
                 </div>
@@ -129,7 +109,7 @@ export default function MarketingPage() {
                 <div className="h-px flex-1 bg-white/10" />
               </div>
               <div>
-                <p className="text-xs font-mono text-emerald-400 mb-2 uppercase tracking-wider">Generated Schema</p>
+                <p className="text-xs font-mono text-emerald-400 mb-2 uppercase tracking-wider">Step 2: Generated Schema</p>
                 <pre className="p-4 rounded-xl bg-black/50 border border-white/5 text-xs text-emerald-300/80 font-mono overflow-x-auto">
                   <code>{`{
   "title": "SaaS Product Feedback",
@@ -155,7 +135,7 @@ export default function MarketingPage() {
             </div>
             
             <div className="p-6 md:p-8 bg-gradient-to-br from-indigo-500/5 to-blue-500/5">
-              <p className="text-xs font-mono text-blue-400 mb-6 uppercase tracking-wider">Live Preview</p>
+              <p className="text-xs font-mono text-blue-400 mb-6 uppercase tracking-wider">Step 3: Live Preview</p>
               <div className="space-y-5 bg-[#0F0F11] border border-white/10 rounded-xl p-6 shadow-xl">
                 <div>
                   <h3 className="text-lg font-medium text-white mb-1">SaaS Product Feedback</h3>
@@ -227,14 +207,100 @@ export default function MarketingPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="relative z-10 border-t border-white/10 bg-[#050505] py-12 px-6">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-indigo-400" />
-            <span className="font-semibold text-white">FormAI</span>
+      {/* Pricing */}
+      <section id="pricing" className="relative z-10 py-24 px-6 max-w-7xl mx-auto border-t border-white/10">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-5xl font-bold text-white mb-4 tracking-tight">Simple, transparent pricing</h2>
+          <p className="text-slate-400 max-w-2xl mx-auto text-lg">
+            Start for free, upgrade when you need more power.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          {/* Free Tier */}
+          <div className="rounded-3xl border border-white/10 bg-[#0A0A0A] p-8 flex flex-col">
+            <h3 className="text-2xl font-semibold text-white mb-2">Hobby</h3>
+            <p className="text-slate-400 mb-6">Perfect for side projects and testing.</p>
+            <div className="mb-8">
+              <span className="text-5xl font-bold text-white">$0</span>
+              <span className="text-slate-500">/month</span>
+            </div>
+            <ul className="space-y-4 mb-8 flex-1">
+              {['Up to 3 forms', '100 responses/month', 'Basic AI generation', 'Standard support'].map((item, i) => (
+                <li key={i} className="flex items-center gap-3 text-slate-300">
+                  <div className="h-5 w-5 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                    <div className="h-1.5 w-1.5 rounded-full bg-indigo-400" />
+                  </div>
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <Link href="/sign-up" className="w-full py-4 rounded-xl border border-white/10 bg-white/5 text-center font-medium text-white hover:bg-white/10 transition-colors">
+              Get Started
+            </Link>
           </div>
-          <p className="text-sm text-slate-500">
+
+          {/* Pro Tier */}
+          <div className="rounded-3xl border border-indigo-500/50 bg-gradient-to-b from-indigo-500/10 to-[#0A0A0A] p-8 flex flex-col relative overflow-hidden">
+            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-indigo-500 to-blue-500" />
+            <div className="absolute top-6 right-6 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-medium border border-indigo-500/30">
+              Most Popular
+            </div>
+            <h3 className="text-2xl font-semibold text-white mb-2">Pro</h3>
+            <p className="text-slate-400 mb-6">For teams that need scale and power.</p>
+            <div className="mb-8">
+              <span className="text-5xl font-bold text-white">$29</span>
+              <span className="text-slate-500">/month</span>
+            </div>
+            <ul className="space-y-4 mb-8 flex-1">
+              {['Unlimited forms', '10,000 responses/month', 'Advanced AI models', 'Priority support', 'Custom domains', 'Team workspaces'].map((item, i) => (
+                <li key={i} className="flex items-center gap-3 text-slate-300">
+                  <div className="h-5 w-5 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                    <div className="h-1.5 w-1.5 rounded-full bg-indigo-400" />
+                  </div>
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <Link href="/sign-up" className="w-full py-4 rounded-xl bg-white text-black text-center font-medium hover:scale-[1.02] transition-transform shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+              Upgrade to Pro
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="relative z-10 border-t border-white/10 bg-[#050505] pt-16 pb-8 px-6">
+        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+          <div className="col-span-2">
+            <div className="flex items-center gap-2 mb-4">
+              <Sparkles className="h-6 w-6 text-indigo-400" />
+              <span className="font-bold text-xl text-white tracking-tight">FormAI</span>
+            </div>
+            <p className="text-slate-400 max-w-sm">
+              The fastest way to build, publish, and analyze forms using the power of artificial intelligence.
+            </p>
+          </div>
+          <div>
+            <h4 className="font-semibold text-white mb-4">Product</h4>
+            <ul className="space-y-2 text-sm text-slate-500">
+              <li><Link href="#features" className="hover:text-white transition-colors">Features</Link></li>
+              <li><Link href="#pricing" className="hover:text-white transition-colors">Pricing</Link></li>
+              <li><Link href="#" className="hover:text-white transition-colors">Changelog</Link></li>
+              <li><Link href="#" className="hover:text-white transition-colors">Documentation</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-semibold text-white mb-4">Legal</h4>
+            <ul className="space-y-2 text-sm text-slate-500">
+              <li><Link href="#" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+              <li><Link href="#" className="hover:text-white transition-colors">Terms of Service</Link></li>
+              <li><Link href="#" className="hover:text-white transition-colors">Cookie Policy</Link></li>
+            </ul>
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="text-sm text-slate-600">
             © 2026 FormAI Inc. All rights reserved.
           </p>
           <div className="flex gap-6 text-sm text-slate-500">

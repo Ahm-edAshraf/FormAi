@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 
+import { DEFAULT_FORM_SUCCESS_MESSAGE } from "../lib/forms/constants";
 import type { Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 import { internalMutation } from "./_generated/server";
@@ -241,6 +242,7 @@ export const completeGenerationSuccess = internalMutation({
       workspaceId: job.workspaceId,
       title: args.title,
       description: args.description,
+      successMessage: DEFAULT_FORM_SUCCESS_MESSAGE,
       slug,
       status: "draft",
       visibility: "workspace",
