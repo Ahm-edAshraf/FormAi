@@ -7,9 +7,11 @@ import { ArrowLeft, Download, Filter, MoreHorizontal, Search, X, ChevronLeft, Ch
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMemo, useState, useRef, useEffect } from "react";
+import { toast } from "sonner";
 
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { getSafeActionMessage } from "@/lib/client-errors";
 import {
   buildResponsesCsv,
   getResponsesCsvFilename,
@@ -419,15 +421,10 @@ export default function ResponsesPage() {
                               if (selectedSubmissionId === submission._id) {
                                 setSelectedSubmissionId(null);
                               }
-                              setActionMessage("Response deleted.");
+                              toast.success("Response deleted.");
                             } catch (error) {
-                              setActionMessage(
-                                error instanceof Error
-                                  ? error.message
-                                  : "Unable to delete this response.",
-                              );
+                              toast.error(getSafeActionMessage(error, "We couldn’t delete this response."));
                             }
-                            setTimeout(() => setActionMessage(null), 4000);
                           }}
                           className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
                         >

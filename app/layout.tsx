@@ -2,6 +2,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
 
 import { ConvexClientProvider } from "../components/providers/convex-client-provider";
+import { Toaster } from "../components/ui/sonner";
 import { publicEnv } from "../lib/env";
 import "./globals.css";
 
@@ -28,7 +29,10 @@ export default function RootLayout({
     >
       <body className="flex min-h-full flex-col bg-background text-foreground selection:bg-primary selection:text-primary-foreground font-sans">
         <ClerkProvider publishableKey={publicEnv.clerkPublishableKey}>
-          <ConvexClientProvider>{children}</ConvexClientProvider>
+          <ConvexClientProvider>
+            {children}
+            <Toaster position="top-right" richColors />
+          </ConvexClientProvider>
         </ClerkProvider>
       </body>
     </html>

@@ -18,14 +18,15 @@ import {
 import { useMutation, useQuery } from "convex/react";
 import Link from "next/link";
 import { useMemo, useState, useRef, useEffect } from "react";
+import { toast } from "sonner";
 
 import { api } from "@/convex/_generated/api";
+import { getSafeActionMessage } from "@/lib/client-errors";
 
 export default function DashboardPage() {
   const { isLoaded, orgId } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const [shellMessage, setShellMessage] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const archiveForm = useMutation(api.forms.archive);
   const deleteForm = useMutation(api.forms.deleteForm);
@@ -98,12 +99,6 @@ export default function DashboardPage() {
           ) : null}
         </div>
       </div>
-
-      {shellMessage ? (
-        <p className="msg-warning text-sm" role="status">
-          {shellMessage}
-        </p>
-      ) : null}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
@@ -191,13 +186,10 @@ export default function DashboardPage() {
                         setOpenMenuId(null);
                         try {
                           await archiveForm({ formId: form._id, clerkOrgId: orgId ?? null });
-                          setShellMessage(`Archived “${form.title}”.`);
+                          toast.success(`Archived “${form.title}”.`);
                         } catch (error) {
-                          setShellMessage(
-                            error instanceof Error ? error.message : "Unable to archive this form.",
-                          );
+                          toast.error(getSafeActionMessage(error, "We couldn’t archive this form."));
                         }
-                        setTimeout(() => setShellMessage(null), 5000);
                       }}
                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-amber-400 hover:bg-amber-500/10 transition-colors"
                   >
@@ -209,13 +201,10 @@ export default function DashboardPage() {
                         setOpenMenuId(null);
                         try {
                           await deleteForm({ formId: form._id, clerkOrgId: orgId ?? null });
-                          setShellMessage(`Deleted “${form.title}”.`);
+                          toast.success(`Deleted “${form.title}”.`);
                         } catch (error) {
-                          setShellMessage(
-                            error instanceof Error ? error.message : "Unable to delete this form.",
-                          );
+                          toast.error(getSafeActionMessage(error, "We couldn’t delete this form."));
                         }
-                        setTimeout(() => setShellMessage(null), 5000);
                       }}
                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
                   >

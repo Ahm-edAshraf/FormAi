@@ -5,9 +5,11 @@ import { useAction, useMutation, useQuery } from "convex/react";
 import { ArrowRight, LayoutTemplate, Sparkles, Wand2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { getSafeActionMessage } from "@/lib/client-errors";
 
 export default function NewFormPage() {
   const router = useRouter();
@@ -18,7 +20,6 @@ export default function NewFormPage() {
   const [prompt, setPrompt] = useState("");
   const [isCreatingBlank, setIsCreatingBlank] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [aiMessage, setAiMessage] = useState<string | null>(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [generatedDraftId, setGeneratedDraftId] = useState<Id<"forms"> | null>(null);
   const generatedDraft = useQuery(
@@ -26,14 +27,11 @@ export default function NewFormPage() {
     generatedDraftId ? { formId: generatedDraftId, clerkOrgId: orgId ?? null } : "skip",
   );
 
-  const handleGenerate = async (event: React.FormEvent) => {
-    event.preventDefault();
-
+  const handleGenerate = async () => {
     if (!prompt.trim() || isGenerating) {
       return;
     }
 
-    setAiMessage(null);
     setIsGenerating(true);
 
     try {
@@ -44,10 +42,8 @@ export default function NewFormPage() {
       setGeneratedDraftId(result.formId);
       setShowReviewModal(true);
     } catch (error) {
-      setAiMessage(
-        error instanceof Error
-          ? error.message
-          : "We could not generate a draft right now. Please try again.",
+      toast.warning(
+        getSafeActionMessage(error, "We couldn’t generate a draft right now. Please try again."),
       );
     } finally {
       setIsGenerating(false);
@@ -59,12 +55,13 @@ export default function NewFormPage() {
       return;
     }
 
-    setAiMessage(null);
     setIsCreatingBlank(true);
 
     try {
       const result = await createBlankForm({ clerkOrgId: orgId ?? null });
       router.push(`/forms/${result.formId}/edit`);
+    } catch {
+      toast.error("We couldn’t create a blank draft right now. Please try again.");
     } finally {
       setIsCreatingBlank(false);
     }
@@ -131,10 +128,14 @@ export default function NewFormPage() {
                 <button
                   onClick={async () => {
                     if (generatedDraftId) {
-                      await deleteForm({
-                        formId: generatedDraftId,
-                        clerkOrgId: orgId ?? null,
-                      });
+                      try {
+                        await deleteForm({
+                          formId: generatedDraftId,
+                          clerkOrgId: orgId ?? null,
+                        });
+                      } catch {
+                        toast.error("We couldn’t discard that generated draft right now.");
+                      }
                     }
                     setShowReviewModal(false);
                     setGeneratedDraftId(null);
@@ -145,7 +146,7 @@ export default function NewFormPage() {
               </button>
               <div className="flex items-center gap-3">
                 <button 
-                  onClick={handleGenerate}
+                  onClick={() => void handleGenerate()}
                   disabled={isGenerating}
                   className="px-6 py-2.5 rounded-xl border border-indigo-500/30 bg-indigo-500/10 text-sm font-medium text-indigo-300 hover:bg-indigo-500/20 transition-colors focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none"
                 >
@@ -180,7 +181,10 @@ export default function NewFormPage() {
         <div className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-indigo-500 to-blue-500 opacity-20 blur-xl transition duration-500 group-hover:opacity-40" />
 
         <form
-          onSubmit={handleGenerate}
+          onSubmit={(event) => {
+            event.preventDefault();
+            void handleGenerate();
+          }}
           className="relative rounded-3xl border border-white/10 bg-[#0A0A0A] p-2 shadow-2xl transition-all focus-within:border-indigo-500/50 focus-within:ring-1 focus-within:ring-indigo-500/50"
         >
           <div className="relative">
@@ -207,12 +211,6 @@ export default function NewFormPage() {
         </form>
       </div>
 
-      {aiMessage ? (
-        <p className="mt-4 rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
-          {aiMessage}
-        </p>
-      ) : null}
-
       <div className="mt-16 grid gap-6 sm:grid-cols-2">
         <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6">
           <h3 className="mb-4 flex items-center gap-2 text-sm font-medium text-white">
@@ -229,7 +227,6 @@ export default function NewFormPage() {
                 key={example}
                 onClick={() => {
                   setPrompt(example);
-                  setAiMessage(null);
                 }}
                 className="w-full rounded-xl border border-white/5 bg-white/5 p-4 text-left text-sm text-slate-300 transition-colors hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none"
               >

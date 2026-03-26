@@ -1,6 +1,6 @@
 "use node";
 
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 
 import {
   FORM_GENERATION_JSON_SCHEMA,
@@ -183,7 +183,14 @@ export const generateDraft = action({
     });
 
     if (!job.ok) {
-      throw new Error(job.errorMessage);
+      throw new ConvexError({
+        type: "rate_limit",
+        code: job.errorCode,
+        message:
+          job.errorCode === "user_burst_limit"
+            ? "You’re generating too quickly. Please try again in a moment."
+            : "AI generation is temporarily unavailable. Please try again later.",
+      });
     }
 
     try {
@@ -202,7 +209,11 @@ export const generateDraft = action({
         failureCode: failure.code,
         failureMessage: failure.message,
       });
-      throw new Error(failure.message);
+      throw new ConvexError({
+        type: "generation_failed",
+        code: failure.code,
+        message: "We couldn’t generate a draft right now. Please try again.",
+      });
     }
   },
 });

@@ -26,9 +26,11 @@ import {
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useMemo, useState, useCallback } from "react";
+import { toast } from "sonner";
 
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { getSafeActionMessage } from "@/lib/client-errors";
 import {
   FORM_FIELD_TYPE_LABELS,
   FORM_FIELD_TYPE_VALUES,
@@ -157,9 +159,8 @@ export default function FormBuilderPage() {
       })
       .catch((error) => {
         setPublishState("error");
-        setPublishMessage(
-          error instanceof Error ? error.message : "Unable to publish this form.",
-        );
+        setPublishMessage(null);
+        toast.error(getSafeActionMessage(error, "We couldn’t publish this form."));
       });
   };
 
@@ -924,10 +925,7 @@ export default function FormBuilderPage() {
                           });
                           router.push("/dashboard");
                         } catch (error) {
-                          setSettingsNotice(
-                            error instanceof Error ? error.message : "Unable to archive this form.",
-                          );
-                          setTimeout(() => setSettingsNotice(null), 5000);
+                          toast.error(getSafeActionMessage(error, "We couldn’t archive this form."));
                         }
                       }}
                       className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-2 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
