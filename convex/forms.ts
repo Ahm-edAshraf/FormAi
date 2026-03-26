@@ -177,6 +177,9 @@ export const getDraft = query({
   },
   handler: async (ctx, args) => {
     const form = await requireFormAccess(ctx, args.formId, args.clerkOrgId);
+    const publishedSnapshot = form.publishedSnapshotId
+      ? await ctx.db.get(form.publishedSnapshotId)
+      : null;
     const fields = await ctx.db
       .query("formFields")
       .withIndex("by_formId_and_order", (q) => q.eq("formId", form._id))
@@ -184,6 +187,14 @@ export const getDraft = query({
 
     return {
       form,
+      publishedSnapshot: publishedSnapshot
+        ? {
+            _id: publishedSnapshot._id,
+            slug: publishedSnapshot.slug,
+            version: publishedSnapshot.version,
+            publishedAt: publishedSnapshot.publishedAt,
+          }
+        : null,
       fields,
       hasMoreFields: fields.length === MAX_FORM_FIELDS,
     };

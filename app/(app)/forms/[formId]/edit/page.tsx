@@ -78,6 +78,7 @@ export default function FormBuilderPage() {
     "idle",
   );
   const [publishMessage, setPublishMessage] = useState<string | null>(null);
+  const [previewMessage, setPreviewMessage] = useState<string | null>(null);
   const fields = useMemo(() => draft?.fields ?? [], [draft?.fields]);
   const resolvedSelectedFieldId =
     selectedFieldId && fields.some((field) => field._id === selectedFieldId)
@@ -147,7 +148,19 @@ export default function FormBuilderPage() {
 
           <div className="mx-2 h-4 w-px bg-white/10" />
 
-          <button className="inline-flex h-8 items-center gap-2 rounded-lg px-3 text-xs font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white">
+          <button
+            type="button"
+            onClick={() => {
+              if (draft.form.status !== "published" || !draft.publishedSnapshot?.slug) {
+                setPreviewMessage("Publish this form first to open the live preview.");
+                return;
+              }
+
+              setPreviewMessage(`Opened live preview for v${draft.publishedSnapshot.version}.`);
+              window.open(`/f/${draft.publishedSnapshot.slug}`, "_blank", "noopener,noreferrer");
+            }}
+            className="inline-flex h-8 items-center gap-2 rounded-lg px-3 text-xs font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white"
+          >
             <Eye className="h-3.5 w-3.5" />
             Preview
           </button>
@@ -190,6 +203,12 @@ export default function FormBuilderPage() {
           }`}
         >
           {publishMessage}
+        </div>
+      ) : null}
+
+      {previewMessage ? (
+        <div className="border-b border-indigo-500/10 bg-indigo-500/5 px-4 py-2 text-xs text-indigo-200">
+          {previewMessage}
         </div>
       ) : null}
 

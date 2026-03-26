@@ -10,12 +10,18 @@ import { useMemo, useState } from "react";
 
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import {
+  buildResponsesCsv,
+  getResponsesCsvFilename,
+} from "@/lib/forms/responses-export";
 
 export default function ResponsesPage() {
   const params = useParams<{ formId: string }>();
   const { isLoaded, orgId } = useAuth();
   const formId = params.formId as Id<"forms">;
   const [searchQuery, setSearchQuery] = useState("");
+  const [exportMessage, setExportMessage] = useState<string | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
   const responseData = useQuery(
     api.submissions.listForOwner,
     isLoaded ? { formId, clerkOrgId: orgId ?? null } : "skip",
@@ -46,6 +52,35 @@ export default function ResponsesPage() {
     );
   }
 
+  const resolvedResponseData = responseData;
+
+  function handleExportCsv() {
+    if (!resolvedResponseData.snapshot) {
+      setExportError("Publish this form before exporting responses.");
+      setExportMessage(null);
+      return;
+    }
+
+    const csv = buildResponsesCsv({
+      fields: resolvedResponseData.snapshot.fields,
+      submissions: resolvedResponseData.submissions,
+    });
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const objectUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = objectUrl;
+    link.download = getResponsesCsvFilename(resolvedResponseData.form.title);
+    link.click();
+    window.URL.revokeObjectURL(objectUrl);
+    setExportError(null);
+    setExportMessage(
+      resolvedResponseData.submissions.length > 0
+        ? `Downloaded ${resolvedResponseData.submissions.length} responses as CSV.`
+        : "Downloaded an empty CSV with the current form fields.",
+    );
+  }
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -63,12 +98,28 @@ export default function ResponsesPage() {
             <Filter className="h-4 w-4" />
             Filter
           </button>
-          <button className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-white px-4 text-sm font-medium text-black transition-transform hover:scale-105">
+          <button
+            type="button"
+            onClick={handleExportCsv}
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-white px-4 text-sm font-medium text-black transition-transform hover:scale-105"
+          >
             <Download className="h-4 w-4" />
             Export CSV
           </button>
         </div>
       </div>
+
+      {exportMessage || exportError ? (
+        <div
+          className={`rounded-xl border px-4 py-3 text-sm ${
+            exportError
+              ? "border-red-500/20 bg-red-500/5 text-red-300"
+              : "border-emerald-500/20 bg-emerald-500/5 text-emerald-300"
+          }`}
+        >
+          {exportError ?? exportMessage}
+        </div>
+      ) : null}
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="p-5 rounded-2xl border border-white/10 bg-[#0A0A0A]">
