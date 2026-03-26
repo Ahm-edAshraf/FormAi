@@ -193,17 +193,6 @@ bunx convex codegen
 - The analytics system tracks views, starts, and submissions in Convex
 - CSV export is currently optimized for the app's bounded owner query flow
 
-## Legal pages included
-
-This repository now includes public-facing pages for:
-
-- Privacy Policy
-- Terms of Use
-- Cookie Policy
-- Data, retention, and deletion
-
-These pages are a practical baseline for deployment and should still be reviewed by a qualified legal professional for your jurisdiction and actual operating model.
-
 ## License and contribution policy
 
 This repository uses a source-available license in `LICENSE`.
