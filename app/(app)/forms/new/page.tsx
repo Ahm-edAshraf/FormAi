@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@clerk/nextjs";
-import { useMutation } from "convex/react";
+import { useAction, useMutation } from "convex/react";
 import { ArrowRight, LayoutTemplate, Sparkles, Wand2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -12,20 +12,37 @@ export default function NewFormPage() {
   const router = useRouter();
   const { orgId } = useAuth();
   const createBlankForm = useMutation(api.forms.createBlank);
+  const generateDraft = useAction(api.aiActions.generateDraft);
   const [prompt, setPrompt] = useState("");
   const [isCreatingBlank, setIsCreatingBlank] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [aiMessage, setAiMessage] = useState<string | null>(null);
 
-  const handleGenerate = (event: React.FormEvent) => {
+  const handleGenerate = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    if (!prompt.trim()) {
+    if (!prompt.trim() || isGenerating) {
       return;
     }
 
-    setAiMessage(
-      "AI draft generation is still pending in this integration chunk. Use Start from scratch to create a real draft now.",
-    );
+    setAiMessage(null);
+    setIsGenerating(true);
+
+    try {
+      const result = await generateDraft({
+        prompt,
+        clerkOrgId: orgId ?? null,
+      });
+      router.push(`/forms/${result.formId}/edit`);
+    } catch (error) {
+      setAiMessage(
+        error instanceof Error
+          ? error.message
+          : "We could not generate a draft right now. Please try again.",
+      );
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleCreateBlank = async () => {
@@ -79,11 +96,11 @@ export default function NewFormPage() {
               <span className="text-xs font-mono text-slate-500">{prompt.length} / 1500</span>
               <button
                 type="submit"
-                disabled={!prompt.trim()}
+                disabled={!prompt.trim() || isGenerating}
                 className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-6 font-medium text-black transition-all hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
               >
                 <Wand2 className="h-4 w-4" />
-                <span>Generate Draft</span>
+                <span>{isGenerating ? "Generating draft..." : "Generate Draft"}</span>
               </button>
             </div>
           </div>

@@ -8,8 +8,11 @@
  * @module
  */
 
+import type * as ai from "../ai.js";
+import type * as aiActions from "../aiActions.js";
 import type * as formFields from "../formFields.js";
 import type * as forms from "../forms.js";
+import type * as lib_ai from "../lib/ai.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_forms from "../lib/forms.js";
 import type * as users from "../users.js";
@@ -22,8 +25,11 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  ai: typeof ai;
+  aiActions: typeof aiActions;
   formFields: typeof formFields;
   forms: typeof forms;
+  "lib/ai": typeof lib_ai;
   "lib/auth": typeof lib_auth;
   "lib/forms": typeof lib_forms;
   users: typeof users;

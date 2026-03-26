@@ -112,4 +112,32 @@ export default defineSchema({
   })
     .index("by_formId_and_version", ["formId", "version"])
     .index("by_formId_and_publishedAt", ["formId", "publishedAt"]),
+
+  aiGenerationJobs: defineTable({
+    workspaceId: v.id("workspaces"),
+    userId: v.id("users"),
+    clerkOrgId: v.union(v.string(), v.null()),
+    provider: v.string(),
+    model: v.string(),
+    status: v.union(
+      v.literal("running"),
+      v.literal("succeeded"),
+      v.literal("failed"),
+      v.literal("rate_limited"),
+    ),
+    prompt: v.string(),
+    normalizedPrompt: v.string(),
+    generatedTitle: v.union(v.string(), v.null()),
+    fieldCount: v.union(v.number(), v.null()),
+    formId: v.union(v.id("forms"), v.null()),
+    failureCode: v.union(v.string(), v.null()),
+    failureMessage: v.union(v.string(), v.null()),
+    startedAt: v.union(v.number(), v.null()),
+    completedAt: v.union(v.number(), v.null()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_userId_and_createdAt", ["userId", "createdAt"])
+    .index("by_workspaceId_and_createdAt", ["workspaceId", "createdAt"])
+    .index("by_formId", ["formId"]),
 });
