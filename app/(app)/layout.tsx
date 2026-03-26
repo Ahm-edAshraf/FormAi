@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { Sparkles } from "lucide-react";
 import Link from "next/link";
 
-import { SessionSync } from "@/components/dashboard/session-sync";
+import { ConvexAuthGate } from "@/components/providers/convex-auth-gate";
 import { WorkspaceSwitcher } from "@/components/dashboard/workspace-switcher";
 import { AppNavLinks } from "./app-nav-links";
 import { MobileNav } from "./mobile-nav";
@@ -20,8 +20,6 @@ export default async function AppLayout({
 
   return (
     <div className="flex min-h-screen flex-col bg-[#050505] text-slate-200 font-sans">
-      <SessionSync />
-      
       {/* Top Navigation */}
       <header className="sticky top-0 z-50 border-b border-white/10 bg-[#050505]/80 backdrop-blur-xl relative">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 h-16 sm:px-6 lg:px-8">
@@ -48,7 +46,7 @@ export default async function AppLayout({
 
       {/* Main Content Area */}
       <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {children}
+        <ConvexAuthGate>{children}</ConvexAuthGate>
       </main>
     </div>
   );

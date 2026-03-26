@@ -4,6 +4,8 @@ import { mutation, query } from "./_generated/server";
 import {
   getCurrentUserRecord,
   getCurrentWorkspaceKey,
+  getWorkspaceByKey,
+  normalizeWorkspaceSlug,
   requireIdentity,
   upsertCurrentUser,
 } from "./lib/auth";
@@ -25,12 +27,34 @@ export const syncCurrentUser = mutation({
   },
   handler: async (ctx, args) => {
     const identity = requireIdentity(await ctx.auth.getUserIdentity());
+    const workspaceKey = getCurrentWorkspaceKey(identity, args.clerkOrgId);
+    const now = Date.now();
+    const userName = args.name?.trim() || args.email || "Personal workspace";
 
-    return await upsertCurrentUser(ctx, {
+    const user = await upsertCurrentUser(ctx, {
       email: args.email,
       name: args.name,
       imageUrl: args.imageUrl,
-      defaultWorkspaceKey: getCurrentWorkspaceKey(identity, args.clerkOrgId),
+      defaultWorkspaceKey: workspaceKey,
     });
+
+    const existingWorkspace = await getWorkspaceByKey(ctx, workspaceKey);
+
+    if (!existingWorkspace) {
+      await ctx.db.insert("workspaces", {
+        workspaceKey,
+        kind: args.clerkOrgId ? "organization" : "personal",
+        clerkOrgId: args.clerkOrgId,
+        ownerClerkUserId: identity.subject,
+        name: args.clerkOrgId ? "Organization workspace" : userName,
+        slug: normalizeWorkspaceSlug(args.clerkOrgId ?? args.email ?? identity.subject),
+        imageUrl: args.clerkOrgId ? null : args.imageUrl,
+        createdBy: user._id,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+
+    return user;
   },
 });

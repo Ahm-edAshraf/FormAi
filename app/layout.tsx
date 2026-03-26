@@ -18,6 +18,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      data-scroll-behavior="smooth"
       className="h-full antialiased dark"
       style={{
         // Fallback to system fonts to avoid Next.js Google Fonts download errors

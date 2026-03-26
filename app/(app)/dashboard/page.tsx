@@ -65,6 +65,7 @@ export default function DashboardPage() {
     publishedForms: 0,
     draftForms: 0,
   };
+  const hasAnyForms = (dashboardData?.forms.length ?? 0) > 0;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -86,13 +87,15 @@ export default function DashboardPage() {
               className="h-10 w-full rounded-full border border-white/10 bg-white/5 pl-9 pr-4 text-sm text-white placeholder:text-slate-500 transition-all focus:border-indigo-500/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/50 sm:w-64"
             />
           </div>
-          <Link
-            href="/forms/new"
-            className="inline-flex h-10 w-full sm:w-auto items-center justify-center gap-2 rounded-full bg-white px-4 text-sm font-medium text-black transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]"
-          >
-            <Plus className="h-4 w-4" />
-            <span>New Form</span>
-          </Link>
+          {hasAnyForms ? (
+            <Link
+              href="/forms/new"
+              className="inline-flex h-10 w-full sm:w-auto items-center justify-center gap-2 rounded-full bg-white px-4 text-sm font-medium text-black transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]"
+            >
+              <Plus className="h-4 w-4" />
+              <span>New Form</span>
+            </Link>
+          ) : null}
         </div>
       </div>
 
@@ -149,19 +152,6 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Link
-          href="/forms/new"
-          className="group flex min-h-[240px] flex-col items-center justify-center gap-4 rounded-3xl border border-dashed border-white/20 bg-white/[0.01] p-8 text-center transition-all hover:border-indigo-500/50 hover:bg-white/[0.03] focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none"
-        >
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/5 transition-colors group-hover:bg-indigo-500/20 group-hover:text-indigo-400">
-            <Plus className="h-6 w-6" />
-          </div>
-          <div>
-            <h3 className="text-base font-medium text-white">Create new form</h3>
-            <p className="mt-1 text-sm text-slate-400">Start from scratch or use AI</p>
-          </div>
-        </Link>
-
         {forms.map((form) => (
           <div
             key={form._id}
@@ -286,13 +276,13 @@ export default function DashboardPage() {
             )}
           </div>
           <h3 className="text-lg font-medium text-white mb-2">
-            {searchQuery.trim() ? "No forms found" : "No forms yet"}
-          </h3>
-          <p className="text-sm text-slate-400 max-w-sm mb-6">
-            {searchQuery.trim()
-              ? `We couldn't find any forms matching "${searchQuery}". Try a different search term.`
-              : "You haven't created any forms in this workspace yet. Start from scratch or use AI to generate one."}
-          </p>
+             {searchQuery.trim() ? "No forms found" : "No forms yet"}
+           </h3>
+           <p className="text-sm text-slate-400 max-w-sm mb-6">
+             {searchQuery.trim()
+               ? `We couldn't find any forms matching "${searchQuery}". Try a different search term.`
+               : "You haven't created any forms in this workspace yet. Create your first form to start collecting responses."}
+            </p>
           {!searchQuery.trim() && (
             <Link
               href="/forms/new"

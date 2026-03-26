@@ -1,5 +1,6 @@
 "use client";
 
+import { ConvexError } from "convex/values";
 import { useMutation, useQuery } from "convex/react";
 import { CheckCircle2, Lock } from "lucide-react";
 import { useParams } from "next/navigation";
@@ -7,7 +8,39 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import type { PublishedFormField, SubmissionValue } from "@/lib/forms/public-runtime";
+import {
+  validateSubmissionAnswers,
+  type PublishedFormField,
+  type SubmissionValue,
+} from "@/lib/forms/public-runtime";
+
+type ValidationErrorPayload = {
+  type: "validation_error";
+  fieldErrors: Record<string, string>;
+};
+
+function getValidationPayload(error: unknown): ValidationErrorPayload | null {
+  if (!(error instanceof ConvexError) && (!error || typeof error !== "object")) {
+    return null;
+  }
+
+  const data = error instanceof ConvexError ? error.data : (error as { data?: unknown }).data;
+
+  if (
+    !data ||
+    typeof data !== "object" ||
+    (data as { type?: unknown }).type !== "validation_error" ||
+    typeof (data as { fieldErrors?: unknown }).fieldErrors !== "object" ||
+    (data as { fieldErrors?: unknown }).fieldErrors === null
+  ) {
+    return null;
+  }
+
+  return {
+    type: "validation_error",
+    fieldErrors: (data as { fieldErrors: Record<string, string> }).fieldErrors,
+  };
+}
 
 function getEmptyValue(field: PublishedFormField): SubmissionValue | "" {
   if (field.type === "checkbox") {
@@ -34,6 +67,17 @@ export default function PublicFormPage() {
   const hasTrackedStartRef = useRef(false);
 
   const fields = useMemo(() => publicForm?.snapshot.fields ?? [], [publicForm?.snapshot.fields]);
+  const validationSummary = useMemo(
+    () =>
+      fields
+        .filter((field) => errors[field.fieldKey])
+        .map((field) => ({
+          fieldKey: field.fieldKey,
+          label: field.label,
+          message: errors[field.fieldKey],
+        })),
+    [errors, fields],
+  );
 
   useEffect(() => {
     if (!snapshotId) {
@@ -193,23 +237,60 @@ export default function PublicFormPage() {
         throw new Error("Published form not found");
       }
 
+      const localValidation = validateSubmissionAnswers(fields, answers);
+
+      if (!localValidation.isValid) {
+        setErrors(localValidation.errors);
+        setSubmitError("Please fix the highlighted fields below.");
+        const firstFieldKey = Object.keys(localValidation.errors)[0];
+        if (firstFieldKey) {
+          window.requestAnimationFrame(() => {
+            document
+              .querySelector<HTMLElement>(`[data-field-key="${CSS.escape(firstFieldKey)}"]`)
+              ?.scrollIntoView({ behavior: "smooth", block: "center" });
+          });
+        }
+        return;
+      }
+
       await submitPublic({
         snapshotId: snapshotId as Id<"formSnapshots">,
         sessionId: sessionIdRef.current ?? window.crypto.randomUUID(),
-        answers,
+        answers: localValidation.values,
       });
       setIsSubmitted(true);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Submission failed";
+      const validationPayload = getValidationPayload(error);
 
-      try {
-        setErrors(JSON.parse(message) as Record<string, string>);
-      } catch {
-        setSubmitError(message);
+      if (validationPayload) {
+        setErrors(validationPayload.fieldErrors ?? {});
+        setSubmitError("Please fix the highlighted fields below.");
+        const firstFieldKey = Object.keys(validationPayload.fieldErrors ?? {})[0];
+        if (firstFieldKey) {
+          window.requestAnimationFrame(() => {
+            document
+              .querySelector<HTMLElement>(`[data-field-key="${CSS.escape(firstFieldKey)}"]`)
+              ?.scrollIntoView({ behavior: "smooth", block: "center" });
+          });
+        }
+      } else {
+        setSubmitError("We couldn’t submit your response. Please review the form and try again.");
       }
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  function clearFieldError(fieldKey: string) {
+    setErrors((current) => {
+      if (!current[fieldKey]) {
+        return current;
+      }
+
+      const next = { ...current };
+      delete next[fieldKey];
+      return next;
+    });
   }
 
   return (
@@ -233,7 +314,7 @@ export default function PublicFormPage() {
             const error = errors[field.fieldKey];
 
             return (
-              <div key={field.fieldKey} className="group space-y-3">
+              <div key={field.fieldKey} data-field-key={field.fieldKey} className="group space-y-3">
                 <label className="block text-sm font-medium text-slate-200 transition-colors group-focus-within:text-indigo-400">
                   {field.label}
                   {field.isRequired ? <span className="text-red-400"> *</span> : null}
@@ -249,12 +330,17 @@ export default function PublicFormPage() {
                     placeholder={field.placeholder || "Type your answer here..."}
                     onChange={(event) => {
                       ensureStartTracked();
+                      clearFieldError(field.fieldKey);
                       setAnswers((current) => ({
                         ...current,
                         [field.fieldKey]: event.target.value,
                       }));
                     }}
-                    className="w-full resize-y rounded-xl border border-white/10 bg-white/5 p-4 text-white placeholder:text-slate-600 transition-all focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+                    className={`w-full resize-y rounded-xl border bg-white/5 p-4 text-white placeholder:text-slate-600 transition-all focus:outline-none focus:ring-1 ${
+                      error
+                        ? "border-red-500/50 focus:border-red-500 focus:ring-red-500/40"
+                        : "border-white/10 focus:border-indigo-500/50 focus:ring-indigo-500/50"
+                    }`}
                   />
                 ) : null}
 
@@ -265,12 +351,17 @@ export default function PublicFormPage() {
                     placeholder={field.placeholder || "Type your answer here..."}
                     onChange={(event) => {
                       ensureStartTracked();
+                      clearFieldError(field.fieldKey);
                       setAnswers((current) => ({
                         ...current,
                         [field.fieldKey]: event.target.value,
                       }));
                     }}
-                    className="h-12 w-full rounded-xl border border-white/10 bg-white/5 px-4 text-white placeholder:text-slate-600 transition-all focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+                    className={`h-12 w-full rounded-xl border bg-white/5 px-4 text-white placeholder:text-slate-600 transition-all focus:outline-none focus:ring-1 ${
+                      error
+                        ? "border-red-500/50 focus:border-red-500 focus:ring-red-500/40"
+                        : "border-white/10 focus:border-indigo-500/50 focus:ring-indigo-500/50"
+                    }`}
                   />
                 ) : null}
 
@@ -280,12 +371,17 @@ export default function PublicFormPage() {
                     value={typeof value === "string" ? value : ""}
                     onChange={(event) => {
                       ensureStartTracked();
+                      clearFieldError(field.fieldKey);
                       setAnswers((current) => ({
                         ...current,
                         [field.fieldKey]: event.target.value,
                       }));
                     }}
-                    className="h-12 w-full rounded-xl border border-white/10 bg-white/5 px-4 text-white transition-all focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+                    className={`h-12 w-full rounded-xl border bg-white/5 px-4 text-white transition-all focus:outline-none focus:ring-1 ${
+                      error
+                        ? "border-red-500/50 focus:border-red-500 focus:ring-red-500/40"
+                        : "border-white/10 focus:border-indigo-500/50 focus:ring-indigo-500/50"
+                    }`}
                   />
                 ) : null}
 
@@ -294,12 +390,17 @@ export default function PublicFormPage() {
                     value={typeof value === "string" ? value : ""}
                     onChange={(event) => {
                       ensureStartTracked();
+                      clearFieldError(field.fieldKey);
                       setAnswers((current) => ({
                         ...current,
                         [field.fieldKey]: event.target.value,
                       }));
                     }}
-                    className="h-12 w-full appearance-none rounded-xl border border-white/10 bg-white/5 px-4 text-white transition-all focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+                    className={`h-12 w-full appearance-none rounded-xl border bg-white/5 px-4 text-white transition-all focus:outline-none focus:ring-1 ${
+                      error
+                        ? "border-red-500/50 focus:border-red-500 focus:ring-red-500/40"
+                        : "border-white/10 focus:border-indigo-500/50 focus:ring-indigo-500/50"
+                    }`}
                   >
                     <option value="">Select an option...</option>
                     {field.options.map((option) => (
@@ -321,6 +422,7 @@ export default function PublicFormPage() {
                           checked={value === option.value}
                           onChange={(event) => {
                             ensureStartTracked();
+                            clearFieldError(field.fieldKey);
                             setAnswers((current) => ({
                               ...current,
                               [field.fieldKey]: event.target.value,
@@ -328,7 +430,9 @@ export default function PublicFormPage() {
                           }}
                           className="peer sr-only"
                         />
-                        <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-400 transition-all peer-checked:border-indigo-500 peer-checked:bg-indigo-600 peer-checked:text-white peer-hover:border-white/30">
+                        <div className={`rounded-xl border bg-white/5 px-4 py-3 text-sm transition-all peer-checked:border-indigo-500 peer-checked:bg-indigo-600 peer-checked:text-white peer-hover:border-white/30 ${
+                          error ? "border-red-500/40 text-slate-300" : "border-white/10 text-slate-400"
+                        }`}>
                           {option.label}
                         </div>
                       </label>
@@ -345,13 +449,16 @@ export default function PublicFormPage() {
                       return (
                         <label
                           key={option.value}
-                          className="flex cursor-pointer items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300 transition-all hover:border-white/20"
+                          className={`flex cursor-pointer items-center gap-3 rounded-xl border bg-white/5 px-4 py-3 text-sm text-slate-300 transition-all hover:border-white/20 ${
+                            error ? "border-red-500/40" : "border-white/10"
+                          }`}
                         >
                           <input
                             type="checkbox"
                             checked={checked}
                             onChange={(event) => {
                               ensureStartTracked();
+                              clearFieldError(field.fieldKey);
                               setAnswers((current) => {
                                 const previous = Array.isArray(current[field.fieldKey])
                                   ? (current[field.fieldKey] as string[])
@@ -385,18 +492,21 @@ export default function PublicFormPage() {
                               name={field.fieldKey}
                               value={rating}
                               checked={value === rating || value === String(rating)}
-                               onChange={(event) => {
-                                 ensureStartTracked();
-                                 setAnswers((current) => ({
-                                   ...current,
-                                   [field.fieldKey]: Number(event.target.value),
-                                 }));
-                               }}
-                              className="peer sr-only"
-                            />
-                            <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-400 transition-all peer-checked:border-indigo-500 peer-checked:bg-indigo-600 peer-checked:text-white peer-hover:border-white/30">
-                              {rating}
-                            </div>
+                                onChange={(event) => {
+                                  ensureStartTracked();
+                                  clearFieldError(field.fieldKey);
+                                  setAnswers((current) => ({
+                                    ...current,
+                                    [field.fieldKey]: Number(event.target.value),
+                                  }));
+                                }}
+                               className="peer sr-only"
+                             />
+                             <div className={`flex h-12 w-12 items-center justify-center rounded-xl border bg-white/5 text-slate-400 transition-all peer-checked:border-indigo-500 peer-checked:bg-indigo-600 peer-checked:text-white peer-hover:border-white/30 ${
+                               error ? "border-red-500/40" : "border-white/10"
+                             }`}>
+                               {rating}
+                             </div>
                           </label>
                         ),
                       )}
@@ -413,7 +523,20 @@ export default function PublicFormPage() {
             );
           })}
 
-          {submitError ? <p className="text-sm text-red-400">{submitError}</p> : null}
+          {submitError ? (
+            <div className="msg-error space-y-3">
+              <p>{submitError}</p>
+              {validationSummary.length > 0 ? (
+                <ul className="space-y-2 text-sm">
+                  {validationSummary.map((item) => (
+                    <li key={item.fieldKey}>
+                      <span className="font-medium text-red-100">{item.label}:</span> {item.message}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          ) : null}
 
           <div className="border-t border-white/10 pt-6">
             <button

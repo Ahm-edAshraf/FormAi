@@ -4,6 +4,12 @@ import { ArrowRight, Menu, Sparkles, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
+const marketingLinks = [
+  { href: "/#features", label: "Features" },
+  { href: "/#how-it-works", label: "How it works" },
+  { href: "/#fair-use", label: "Fair use" },
+] as const;
+
 export function MarketingHeader() {
   const [open, setOpen] = useState(false);
 
@@ -18,17 +24,17 @@ export function MarketingHeader() {
         <span className="font-bold text-xl tracking-tight text-white">FormAI</span>
       </div>
 
-      <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
-        <Link href="#features" className="hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded-md px-1">
-          Features
-        </Link>
-        <Link href="#how-it-works" className="hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded-md px-1">
-          How it works
-        </Link>
-        <Link href="#pricing" className="hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded-md px-1">
-          Pricing
-        </Link>
-      </nav>
+        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
+          {marketingLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded-md px-1"
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
 
       <div className="hidden md:flex items-center gap-4">
         <Link
@@ -68,18 +74,14 @@ export function MarketingHeader() {
       {open ? (
         <div className="absolute left-0 right-0 top-full z-20 border-b border-white/10 bg-[#0A0A0A]/95 backdrop-blur-xl md:hidden animate-in slide-in-from-top-2 duration-200">
           <nav className="flex flex-col gap-1 p-4 max-w-7xl mx-auto">
-            {[
-              ["#features", "Features"],
-              ["#how-it-works", "How it works"],
-              ["#pricing", "Pricing"],
-            ].map(([href, label]) => (
+            {marketingLinks.map((link) => (
               <Link
-                key={href}
-                href={href}
+                key={link.href}
+                href={link.href}
                 onClick={() => setOpen(false)}
                 className="rounded-xl px-4 py-3 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
               >
-                {label}
+                {link.label}
               </Link>
             ))}
             <Link

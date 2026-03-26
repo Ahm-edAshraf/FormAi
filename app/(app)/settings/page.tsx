@@ -1,9 +1,9 @@
 "use client";
 
-import { useAuth, useOrganization, useUser, UserProfile } from "@clerk/nextjs";
+import { SignOutButton, useAuth, useOrganization, useUser, UserProfile } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
-import { Bell, Building2, CreditCard, Key, Shield, User, ExternalLink } from "lucide-react";
+import { Building2, ExternalLink, LogOut, User } from "lucide-react";
 import { useState } from "react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -65,10 +65,6 @@ export default function SettingsPage() {
             {[
               { icon: User, label: "Profile" },
               { icon: Building2, label: "Workspace" },
-              { icon: CreditCard, label: "Billing" },
-              { icon: Bell, label: "Notifications" },
-              { icon: Shield, label: "Security" },
-              { icon: Key, label: "API Keys" },
             ].map((item) => (
               <button
                 key={item.label}
@@ -84,6 +80,17 @@ export default function SettingsPage() {
                 {item.label}
               </button>
             ))}
+            <div className="mt-4 border-t border-white/10 pt-4">
+              <SignOutButton>
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-400 transition-colors whitespace-nowrap hover:bg-white/5 hover:text-white focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none"
+                >
+                  <LogOut className="h-4 w-4 shrink-0" />
+                  Sign out
+                </button>
+              </SignOutButton>
+            </div>
           </nav>
         </aside>
 
@@ -225,27 +232,6 @@ export default function SettingsPage() {
                   }
                 }}
               />
-            </div>
-          )}
-
-          {["Billing", "Notifications", "Security", "API Keys"].includes(activeTab) && (
-            <div className="surface-panel flex flex-col items-center justify-center border-dashed p-10 text-center sm:p-12">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-white/5">
-                {activeTab === "Billing" ? (
-                  <CreditCard className="h-6 w-6 text-slate-500" />
-                ) : activeTab === "Notifications" ? (
-                  <Bell className="h-6 w-6 text-slate-500" />
-                ) : activeTab === "Security" ? (
-                  <Shield className="h-6 w-6 text-slate-500" />
-                ) : (
-                  <Key className="h-6 w-6 text-slate-500" />
-                )}
-              </div>
-              <h3 className="mb-2 text-lg font-medium text-white">{activeTab}</h3>
-              <p className="max-w-sm text-sm text-slate-400">
-                This area is a polished placeholder — billing rules, webhooks, and API keys still need
-                backend contracts before we wire real controls.
-              </p>
             </div>
           )}
         </div>

@@ -41,6 +41,28 @@ function isIsoDate(value: string): boolean {
   return !Number.isNaN(parsed.getTime()) && parsed.toISOString().startsWith(value);
 }
 
+function getSpecificPatternError(field: PublishedFormField): string {
+  const context = `${field.label} ${field.placeholder} ${field.description}`.toLowerCase();
+
+  if (context.includes("email")) {
+    return "Enter a valid email address, for example name@example.com.";
+  }
+
+  if (context.includes("phone") || context.includes("mobile") || context.includes("whatsapp")) {
+    return "Enter a valid phone number, including country code if needed.";
+  }
+
+  if (context.includes("year") || context.includes("experience") || context.includes("number")) {
+    return "Enter a valid number.";
+  }
+
+  if (context.includes("url") || context.includes("website") || context.includes("link")) {
+    return "Enter a valid URL, including https:// if required.";
+  }
+
+  return "Enter a valid value in the expected format.";
+}
+
 export function validateSubmissionAnswers(
   fields: PublishedFormField[],
   answers: Record<string, unknown>,
@@ -137,7 +159,7 @@ export function validateSubmissionAnswers(
       field.validation.pattern &&
       !new RegExp(field.validation.pattern).test(stringValue)
     ) {
-      errors[field.fieldKey] = "Enter a valid value.";
+      errors[field.fieldKey] = getSpecificPatternError(field);
       continue;
     }
 

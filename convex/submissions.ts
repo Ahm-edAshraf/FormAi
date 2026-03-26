@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 
 import {
   formatSubmissionAnswer,
@@ -42,7 +42,10 @@ export const submitPublic = mutation({
     );
 
     if (!validation.isValid) {
-      throw new Error(JSON.stringify(validation.errors));
+      throw new ConvexError({
+        type: "validation_error",
+        fieldErrors: validation.errors,
+      });
     }
 
     const now = Date.now();

@@ -23,7 +23,7 @@ const features = [
 
 export default function MarketingPage() {
   return (
-    <main className="relative min-h-screen bg-[#050505] text-slate-200 selection:bg-indigo-500/30 overflow-hidden font-sans">
+    <main className="relative min-h-screen overflow-hidden bg-[#050505] text-slate-200 selection:bg-indigo-500/30 font-sans">
       {/* Background Effects */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-600/20 blur-[120px]" />
@@ -36,7 +36,7 @@ export default function MarketingPage() {
       <MarketingHeader />
 
       {/* Hero Section */}
-      <section className="relative z-10 pt-32 pb-20 px-6 max-w-7xl mx-auto text-center">
+      <section className="relative z-10 mx-auto max-w-7xl px-6 pb-20 pt-32 text-center animate-in fade-in slide-in-from-bottom-6 duration-700">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-sm text-indigo-300 mb-8 backdrop-blur-md">
           <Zap className="h-4 w-4" />
           <span>FormAI v2.0 is now live</span>
@@ -60,11 +60,11 @@ export default function MarketingPage() {
             className="group relative inline-flex h-14 items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-indigo-500 to-blue-600 px-8 text-base font-medium text-white transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(99,102,241,0.4)]"
           >
             <span className="relative z-10 flex items-center gap-2">
-              Start building for free <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              Start building <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </span>
           </Link>
           <Link
-            href="#how-it-works"
+            href="/#how-it-works"
             className="app-focus inline-flex h-14 items-center justify-center rounded-full border border-white/10 bg-white/5 px-8 text-base font-medium text-white backdrop-blur-md transition-colors hover:bg-white/10"
           >
             View demo
@@ -73,7 +73,7 @@ export default function MarketingPage() {
       </section>
 
       {/* Interactive Terminal Showcase */}
-      <section id="how-it-works" className="relative z-10 max-w-5xl mx-auto px-6 pb-32">
+      <section id="how-it-works" className="relative z-10 mx-auto max-w-5xl scroll-mt-28 px-6 pb-32 animate-in fade-in duration-1000">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-5xl font-bold text-white mb-4 tracking-tight">How it works</h2>
           <p className="text-slate-400 max-w-2xl mx-auto text-lg">
@@ -181,7 +181,7 @@ export default function MarketingPage() {
       </section>
 
       {/* Features Grid */}
-      <section id="features" className="relative z-10 py-24 px-6 max-w-7xl mx-auto border-t border-white/10">
+      <section id="features" className="relative z-10 mx-auto max-w-7xl scroll-mt-28 border-t border-white/10 px-6 py-24 animate-in fade-in duration-1000">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-5xl font-bold text-white mb-4 tracking-tight">Built for modern teams</h2>
           <p className="text-slate-400 max-w-2xl mx-auto text-lg">
@@ -207,70 +207,79 @@ export default function MarketingPage() {
         </div>
       </section>
 
-      {/* Pricing */}
-      <section id="pricing" className="relative z-10 py-24 px-6 max-w-7xl mx-auto border-t border-white/10">
+      {/* Fair Use */}
+      <section id="fair-use" className="relative z-10 mx-auto max-w-7xl scroll-mt-28 border-t border-white/10 px-6 py-24 animate-in fade-in duration-1000">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-5xl font-bold text-white mb-4 tracking-tight">Simple, transparent pricing</h2>
+          <h2 className="text-3xl md:text-5xl font-bold text-white mb-4 tracking-tight">Simple, generous fair use</h2>
           <p className="text-slate-400 max-w-2xl mx-auto text-lg">
-            Start for free, upgrade when you need more power.
+            No subscriptions, no paywall, no billing screen. FormAI stays open with generous AI limits designed to keep the experience fast and sustainable for everyone.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          {/* Free Tier */}
-          <div className="rounded-3xl border border-white/10 bg-[#0A0A0A] p-8 flex flex-col">
-            <h3 className="text-2xl font-semibold text-white mb-2">Hobby</h3>
-            <p className="text-slate-400 mb-6">Perfect for side projects and testing.</p>
-            <div className="mb-8">
-              <span className="text-5xl font-bold text-white">$0</span>
-              <span className="text-slate-500">/month</span>
+        <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] max-w-5xl mx-auto">
+          <div className="rounded-3xl border border-white/10 bg-[#0A0A0A] p-8">
+            <div className="mb-8 flex items-center justify-between gap-4">
+              <div>
+                <h3 className="text-2xl font-semibold text-white">Everyone gets the same product</h3>
+                <p className="mt-2 text-slate-400">
+                  The limits are there to prevent abuse, not to upsell you into a paid plan.
+                </p>
+              </div>
+              <div className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-sm font-medium text-emerald-300">
+                No pricing tiers
+              </div>
             </div>
-            <ul className="space-y-4 mb-8 flex-1">
-              {['Up to 3 forms', '100 responses/month', 'Basic AI generation', 'Standard support'].map((item, i) => (
-                <li key={i} className="flex items-center gap-3 text-slate-300">
-                  <div className="h-5 w-5 rounded-full bg-indigo-500/20 flex items-center justify-center">
-                    <div className="h-1.5 w-1.5 rounded-full bg-indigo-400" />
-                  </div>
-                  {item}
-                </li>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              {[
+                ["AI generations", "Up to 5 per user per day"],
+                ["Workspace allowance", "Up to 20 AI generations per workspace per day"],
+                ["Burst protection", "1 generation per minute per user"],
+                ["Forms and responses", "No artificial billing tier limits in the app UI"],
+              ].map(([label, value]) => (
+                <div key={label} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+                  <p className="text-xs font-mono uppercase tracking-wider text-slate-500">{label}</p>
+                  <p className="mt-3 text-base font-medium text-white">{value}</p>
+                </div>
               ))}
-            </ul>
-            <Link href="/sign-up" className="w-full py-4 rounded-xl border border-white/10 bg-white/5 text-center font-medium text-white hover:bg-white/10 transition-colors">
-              Get Started
-            </Link>
+            </div>
+
+            <p className="mt-6 text-sm leading-7 text-slate-400">
+              The current AI path uses Groq structured outputs with conservative limits so the product can stay reliable without turning into a billing-heavy SaaS. If usage patterns change later, limits can be tuned without adding subscriptions.
+            </p>
           </div>
 
-          {/* Pro Tier */}
-          <div className="rounded-3xl border border-indigo-500/50 bg-gradient-to-b from-indigo-500/10 to-[#0A0A0A] p-8 flex flex-col relative overflow-hidden">
+          <div className="rounded-3xl border border-indigo-500/30 bg-gradient-to-b from-indigo-500/10 to-[#0A0A0A] p-8 relative overflow-hidden">
             <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-indigo-500 to-blue-500" />
-            <div className="absolute top-6 right-6 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-medium border border-indigo-500/30">
-              Most Popular
-            </div>
-            <h3 className="text-2xl font-semibold text-white mb-2">Pro</h3>
-            <p className="text-slate-400 mb-6">For teams that need scale and power.</p>
-            <div className="mb-8">
-              <span className="text-5xl font-bold text-white">$29</span>
-              <span className="text-slate-500">/month</span>
-            </div>
-            <ul className="space-y-4 mb-8 flex-1">
-              {['Unlimited forms', '10,000 responses/month', 'Advanced AI models', 'Priority support', 'Custom domains', 'Team workspaces'].map((item, i) => (
-                <li key={i} className="flex items-center gap-3 text-slate-300">
-                  <div className="h-5 w-5 rounded-full bg-indigo-500/20 flex items-center justify-center">
+            <h3 className="text-2xl font-semibold text-white mb-3">What this means in practice</h3>
+            <ul className="space-y-4 text-slate-300">
+              {[
+                "You can prototype quickly without reaching for a checkout flow.",
+                "Teams share one fair-use pool instead of plan management complexity.",
+                "The product stays simple: sign in, generate, edit, publish, collect.",
+                "If a limit is hit, the app should explain it clearly instead of trying to sell an upgrade.",
+              ].map((item, index) => (
+                <li key={index} className="flex items-start gap-3">
+                  <div className="mt-1 h-5 w-5 rounded-full bg-indigo-500/20 flex items-center justify-center shrink-0">
                     <div className="h-1.5 w-1.5 rounded-full bg-indigo-400" />
                   </div>
-                  {item}
+                  <span>{item}</span>
                 </li>
               ))}
             </ul>
-            <Link href="/sign-up" className="w-full py-4 rounded-xl bg-white text-black text-center font-medium hover:scale-[1.02] transition-transform shadow-[0_0_20px_rgba(255,255,255,0.1)]">
-              Upgrade to Pro
-            </Link>
+
+            <div className="mt-8 rounded-2xl border border-white/10 bg-black/20 p-5">
+              <p className="text-xs font-mono uppercase tracking-wider text-slate-500">Current policy</p>
+              <p className="mt-3 text-sm leading-7 text-slate-300">
+                FormAI is currently offered without a paid billing model. Access is governed by technical fair-use limits, service availability, and the legal policies linked below.
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-white/10 bg-[#050505] pt-16 pb-8 px-6">
+      <footer className="relative z-10 border-t border-white/10 bg-[#050505] px-6 pb-8 pt-16 animate-in fade-in duration-1000">
         <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
           <div className="col-span-2">
             <div className="flex items-center gap-2 mb-4">
@@ -278,35 +287,36 @@ export default function MarketingPage() {
               <span className="font-bold text-xl text-white tracking-tight">FormAI</span>
             </div>
             <p className="text-slate-400 max-w-sm">
-              The fastest way to build, publish, and analyze forms using the power of artificial intelligence.
+              The fastest way to generate, refine, publish, and analyze forms with AI-assisted structure and a clean builder workflow.
             </p>
           </div>
           <div>
             <h4 className="font-semibold text-white mb-4">Product</h4>
             <ul className="space-y-2 text-sm text-slate-500">
-              <li><Link href="#features" className="hover:text-white transition-colors">Features</Link></li>
-              <li><Link href="#pricing" className="hover:text-white transition-colors">Pricing</Link></li>
-              <li><Link href="#" className="hover:text-white transition-colors">Changelog</Link></li>
-              <li><Link href="#" className="hover:text-white transition-colors">Documentation</Link></li>
+              <li><Link href="/#features" className="hover:text-white transition-colors">Features</Link></li>
+              <li><Link href="/#how-it-works" className="hover:text-white transition-colors">How it works</Link></li>
+              <li><Link href="/#fair-use" className="hover:text-white transition-colors">Fair use</Link></li>
+              <li><Link href="/dashboard" className="hover:text-white transition-colors">Open app</Link></li>
             </ul>
           </div>
           <div>
             <h4 className="font-semibold text-white mb-4">Legal</h4>
             <ul className="space-y-2 text-sm text-slate-500">
-              <li><Link href="#" className="hover:text-white transition-colors">Privacy Policy</Link></li>
-              <li><Link href="#" className="hover:text-white transition-colors">Terms of Service</Link></li>
-              <li><Link href="#" className="hover:text-white transition-colors">Cookie Policy</Link></li>
+              <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/terms" className="hover:text-white transition-colors">Terms of Use</Link></li>
+              <li><Link href="/cookies" className="hover:text-white transition-colors">Cookie Policy</Link></li>
+              <li><Link href="/data" className="hover:text-white transition-colors">Data & deletion</Link></li>
             </ul>
           </div>
         </div>
         <div className="max-w-7xl mx-auto pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-sm text-slate-600">
-            © 2026 FormAI Inc. All rights reserved.
+            © 2026 FormAI. Operated by Ahmed Ashraf Yassen Aly.
           </p>
           <div className="flex gap-6 text-sm text-slate-500">
-            <Link href="#" className="hover:text-white transition-colors">Twitter</Link>
-            <Link href="#" className="hover:text-white transition-colors">GitHub</Link>
-            <Link href="#" className="hover:text-white transition-colors">Discord</Link>
+            <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+            <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
+            <Link href="/cookies" className="hover:text-white transition-colors">Cookies</Link>
           </div>
         </div>
       </footer>

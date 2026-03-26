@@ -125,6 +125,8 @@
   }
   html {
     @apply font-sans;
+    scroll-behavior: smooth;
+    scroll-padding-top: 6rem;
   }
 }
 
@@ -163,4 +165,3 @@
     @apply rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-200;
   }
 }
-

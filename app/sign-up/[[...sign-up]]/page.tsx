@@ -24,6 +24,9 @@ export default function SignUpPage() {
 
         <div className="w-full max-w-md animate-in fade-in zoom-in-95 duration-500">
           <SignUp 
+            forceRedirectUrl="/dashboard"
+            fallbackRedirectUrl="/dashboard"
+            signInForceRedirectUrl="/dashboard"
             appearance={{
               elements: {
                 rootBox: "w-full",

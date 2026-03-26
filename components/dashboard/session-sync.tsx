@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth, useOrganization, useUser } from "@clerk/nextjs";
-import { useMutation } from "convex/react";
+import { useConvexAuth, useMutation } from "convex/react";
 import { useEffect, useMemo, useRef } from "react";
 
 import { api } from "@/convex/_generated/api";
@@ -14,6 +14,7 @@ export function SessionSync() {
   const { isLoaded: isAuthLoaded, orgId, userId } = useAuth();
   const { isLoaded: isUserLoaded, user } = useUser();
   const { organization } = useOrganization();
+  const { isAuthenticated, isLoading: isConvexAuthLoading } = useConvexAuth();
   const syncCurrentUser = useMutation(api.users.syncCurrentUser);
   const syncActiveWorkspace = useMutation(api.workspaces.syncActiveWorkspace);
   const lastSynced = useRef<string | null>(null);
@@ -63,7 +64,14 @@ export function SessionSync() {
   }, [orgId, organization, user]);
 
   useEffect(() => {
-    if (!isAuthLoaded || !isUserLoaded || !userId || !payload) {
+    if (
+      !isAuthLoaded ||
+      !isUserLoaded ||
+      !userId ||
+      !payload ||
+      isConvexAuthLoading ||
+      !isAuthenticated
+    ) {
       return;
     }
 
@@ -79,12 +87,20 @@ export function SessionSync() {
       try {
         await syncCurrentUser(payload.user);
         await syncActiveWorkspace(payload.workspace);
-      } catch (error) {
-        console.error("Failed to sync Clerk session", error);
+      } catch {
         lastSynced.current = null;
       }
     })();
-  }, [isAuthLoaded, isUserLoaded, payload, syncActiveWorkspace, syncCurrentUser, userId]);
+  }, [
+    isAuthLoaded,
+    isAuthenticated,
+    isConvexAuthLoading,
+    isUserLoaded,
+    payload,
+    syncActiveWorkspace,
+    syncCurrentUser,
+    userId,
+  ]);
 
   return null;
 }
