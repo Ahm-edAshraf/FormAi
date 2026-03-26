@@ -11,10 +11,13 @@
 import type * as ai from "../ai.js";
 import type * as aiActions from "../aiActions.js";
 import type * as formFields from "../formFields.js";
+import type * as formSnapshots from "../formSnapshots.js";
 import type * as forms from "../forms.js";
 import type * as lib_ai from "../lib/ai.js";
 import type * as lib_auth from "../lib/auth.js";
+import type * as lib_formRuntime from "../lib/formRuntime.js";
 import type * as lib_forms from "../lib/forms.js";
+import type * as submissions from "../submissions.js";
 import type * as users from "../users.js";
 import type * as workspaces from "../workspaces.js";
 
@@ -28,10 +31,13 @@ declare const fullApi: ApiFromModules<{
   ai: typeof ai;
   aiActions: typeof aiActions;
   formFields: typeof formFields;
+  formSnapshots: typeof formSnapshots;
   forms: typeof forms;
   "lib/ai": typeof lib_ai;
   "lib/auth": typeof lib_auth;
+  "lib/formRuntime": typeof lib_formRuntime;
   "lib/forms": typeof lib_forms;
+  submissions: typeof submissions;
   users: typeof users;
   workspaces: typeof workspaces;
 }>;

@@ -1,6 +1,11 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
+import {
+  publishedFieldValidator,
+  submissionAnswerValueValidator,
+} from "./lib/formRuntime";
+
 export default defineSchema({
   users: defineTable({
     tokenIdentifier: v.string(),
@@ -105,13 +110,23 @@ export default defineSchema({
     title: v.string(),
     description: v.string(),
     slug: v.string(),
-    fields: v.array(v.any()),
+    fields: v.array(publishedFieldValidator),
     theme: v.object({}),
     publishedAt: v.union(v.number(), v.null()),
     createdBy: v.id("users"),
   })
     .index("by_formId_and_version", ["formId", "version"])
-    .index("by_formId_and_publishedAt", ["formId", "publishedAt"]),
+    .index("by_formId_and_publishedAt", ["formId", "publishedAt"])
+    .index("by_slug_and_publishedAt", ["slug", "publishedAt"]),
+
+  submissions: defineTable({
+    formId: v.id("forms"),
+    snapshotId: v.id("formSnapshots"),
+    answers: v.record(v.string(), submissionAnswerValueValidator),
+    submittedAt: v.number(),
+  })
+    .index("by_formId_and_submittedAt", ["formId", "submittedAt"])
+    .index("by_snapshotId_and_submittedAt", ["snapshotId", "submittedAt"]),
 
   aiGenerationJobs: defineTable({
     workspaceId: v.id("workspaces"),

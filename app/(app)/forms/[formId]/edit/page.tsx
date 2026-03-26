@@ -68,11 +68,16 @@ export default function FormBuilderPage() {
     isLoaded ? { formId, clerkOrgId: orgId ?? null } : "skip",
   );
   const updateForm = useMutation(api.forms.updateDraft);
+  const publishForm = useMutation(api.formSnapshots.publish);
   const addField = useMutation(api.formFields.addField);
   const updateField = useMutation(api.formFields.updateField);
   const removeField = useMutation(api.formFields.removeField);
   const [activeTab, setActiveTab] = useState("build");
   const [selectedFieldId, setSelectedFieldId] = useState<Id<"formFields"> | null>(null);
+  const [publishState, setPublishState] = useState<"idle" | "publishing" | "success" | "error">(
+    "idle",
+  );
+  const [publishMessage, setPublishMessage] = useState<string | null>(null);
   const fields = useMemo(() => draft?.fields ?? [], [draft?.fields]);
   const resolvedSelectedFieldId =
     selectedFieldId && fields.some((field) => field._id === selectedFieldId)
@@ -146,12 +151,47 @@ export default function FormBuilderPage() {
             <Eye className="h-3.5 w-3.5" />
             Preview
           </button>
-          <button className="inline-flex h-8 items-center gap-2 rounded-lg bg-white px-4 text-xs font-medium text-black transition-transform hover:scale-105">
+          <button
+            type="button"
+            onClick={() => {
+              setPublishState("publishing");
+              setPublishMessage(null);
+
+              void publishForm({
+                formId: draft.form._id,
+                clerkOrgId: orgId ?? null,
+              })
+                .then((result) => {
+                  setPublishState("success");
+                  setPublishMessage(`Published v${result.version}`);
+                })
+                .catch((error) => {
+                  setPublishState("error");
+                  setPublishMessage(
+                    error instanceof Error ? error.message : "Unable to publish this form.",
+                  );
+                });
+            }}
+            disabled={publishState === "publishing"}
+            className="inline-flex h-8 items-center gap-2 rounded-lg bg-white px-4 text-xs font-medium text-black transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-70"
+          >
             <Send className="h-3.5 w-3.5" />
-            Publish
+            {publishState === "publishing" ? "Publishing..." : "Publish"}
           </button>
         </div>
       </header>
+
+      {publishMessage ? (
+        <div
+          className={`border-b px-4 py-2 text-xs ${
+            publishState === "error"
+              ? "border-red-500/10 bg-red-500/5 text-red-300"
+              : "border-emerald-500/10 bg-emerald-500/5 text-emerald-300"
+          }`}
+        >
+          {publishMessage}
+        </div>
+      ) : null}
 
       <div className="flex flex-1 overflow-hidden">
         <aside className="flex w-64 flex-col border-r border-white/10 bg-white/[0.01]">

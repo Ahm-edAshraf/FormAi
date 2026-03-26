@@ -1,19 +1,53 @@
 "use client";
 
+import { useAuth } from "@clerk/nextjs";
+import { useQuery } from "convex/react";
+import { formatDistanceToNow } from "date-fns";
 import { ArrowLeft, Download, Filter, MoreHorizontal, Search } from "lucide-react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
+import { useMemo, useState } from "react";
 
-const mockResponses = [
-  { id: "1", role: "Software Engineer", liked: "The AI generation is incredibly fast.", rating: 9, date: "10 mins ago" },
-  { id: "2", role: "Product Manager", liked: "Clean UI and immutable snapshots.", rating: 10, date: "2 hours ago" },
-  { id: "3", role: "Designer", liked: "The dark mode aesthetic is stunning.", rating: 8, date: "5 hours ago" },
-  { id: "4", role: "Founder / Executive", liked: "Saves my team hours of work.", rating: 10, date: "1 day ago" },
-];
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 
 export default function ResponsesPage() {
+  const params = useParams<{ formId: string }>();
+  const { isLoaded, orgId } = useAuth();
+  const formId = params.formId as Id<"forms">;
+  const [searchQuery, setSearchQuery] = useState("");
+  const responseData = useQuery(
+    api.submissions.listForOwner,
+    isLoaded ? { formId, clerkOrgId: orgId ?? null } : "skip",
+  );
+
+  const submissions = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+    const rows = responseData?.submissions ?? [];
+
+    if (!normalizedQuery) {
+      return rows;
+    }
+
+    return rows.filter((submission) =>
+      submission.preview.some(
+        (cell) =>
+          cell.label.toLowerCase().includes(normalizedQuery) ||
+          cell.value.toLowerCase().includes(normalizedQuery),
+      ),
+    );
+  }, [responseData?.submissions, searchQuery]);
+
+  if (responseData === undefined) {
+    return (
+      <div className="flex h-[calc(100vh-8rem)] items-center justify-center rounded-2xl border border-white/10 bg-[#050505] text-sm text-slate-400">
+        Loading responses...
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Link href="/dashboard" className="p-2 -ml-2 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white transition-colors">
@@ -21,7 +55,7 @@ export default function ResponsesPage() {
           </Link>
           <div>
             <h1 className="text-2xl font-bold text-white tracking-tight">Responses</h1>
-            <p className="text-sm text-slate-400 mt-1">Customer Research Intake</p>
+            <p className="text-sm text-slate-400 mt-1">{responseData.form.title}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -36,23 +70,27 @@ export default function ResponsesPage() {
         </div>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="p-5 rounded-2xl border border-white/10 bg-[#0A0A0A]">
           <p className="text-sm text-slate-400">Total Responses</p>
-          <p className="text-3xl font-semibold text-white mt-2">142</p>
+          <p className="text-3xl font-semibold text-white mt-2">{responseData.stats.totalResponses}</p>
         </div>
         <div className="p-5 rounded-2xl border border-white/10 bg-[#0A0A0A]">
-          <p className="text-sm text-slate-400">Completion Rate</p>
-          <p className="text-3xl font-semibold text-emerald-400 mt-2">68%</p>
+          <p className="text-sm text-slate-400">Conversion Rate</p>
+          <p className="text-3xl font-semibold text-emerald-400 mt-2">
+            {responseData.stats.conversionRate === null
+              ? "--"
+              : `${responseData.stats.conversionRate}%`}
+          </p>
         </div>
         <div className="p-5 rounded-2xl border border-white/10 bg-[#0A0A0A]">
-          <p className="text-sm text-slate-400">Avg. Rating</p>
-          <p className="text-3xl font-semibold text-indigo-400 mt-2">9.2</p>
+          <p className="text-sm text-slate-400">Published Snapshot</p>
+          <p className="text-3xl font-semibold text-indigo-400 mt-2">
+            {responseData.snapshot ? `v${responseData.snapshot.version}` : "--"}
+          </p>
         </div>
       </div>
 
-      {/* Table */}
       <div className="rounded-2xl border border-white/10 bg-[#0A0A0A] overflow-hidden">
         <div className="p-4 border-b border-white/10 flex items-center justify-between">
           <div className="relative">
@@ -60,6 +98,8 @@ export default function ResponsesPage() {
             <input 
               type="text" 
               placeholder="Search responses..." 
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
               className="h-9 w-64 rounded-lg border border-white/10 bg-white/5 pl-9 pr-4 text-sm text-white placeholder:text-slate-500 focus:border-indigo-500/50 focus:outline-none"
             />
           </div>
@@ -69,28 +109,31 @@ export default function ResponsesPage() {
             <thead className="bg-white/[0.02] text-xs uppercase text-slate-500 border-b border-white/10">
               <tr>
                 <th className="px-6 py-4 font-medium">Date</th>
-                <th className="px-6 py-4 font-medium">Role</th>
-                <th className="px-6 py-4 font-medium">Feedback</th>
-                <th className="px-6 py-4 font-medium">Rating</th>
+                {(responseData.snapshot?.fields ?? []).slice(0, 3).map((field) => (
+                  <th key={field.fieldKey} className="px-6 py-4 font-medium">
+                    {field.label}
+                  </th>
+                ))}
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {mockResponses.map((res) => (
-                <tr key={res.id} className="hover:bg-white/[0.02] transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-slate-400">{res.date}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                      {res.role}
-                    </span>
+              {submissions.map((submission) => (
+                <tr key={submission._id} className="hover:bg-white/[0.02] transition-colors">
+                  <td className="px-6 py-4 whitespace-nowrap text-slate-400">
+                    {formatDistanceToNow(submission.submittedAt, { addSuffix: true })}
                   </td>
-                  <td className="px-6 py-4 max-w-xs truncate">{res.liked}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-mono text-emerald-400">{res.rating}</span>
-                      <span className="text-slate-600">/ 10</span>
-                    </div>
-                  </td>
+                  {submission.preview.map((cell) => (
+                    <td key={cell.fieldKey} className="px-6 py-4 max-w-xs truncate">
+                      {cell.type === "rating" ? (
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-mono text-emerald-400">{cell.value}</span>
+                        </div>
+                      ) : (
+                        cell.value
+                      )}
+                    </td>
+                  ))}
                   <td className="px-6 py-4 text-right">
                     <button className="p-1.5 rounded-md hover:bg-white/10 text-slate-400 transition-colors">
                       <MoreHorizontal className="h-4 w-4" />
@@ -98,14 +141,30 @@ export default function ResponsesPage() {
                   </td>
                 </tr>
               ))}
+              {submissions.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={(responseData.snapshot?.fields ?? []).slice(0, 3).length + 2}
+                    className="px-6 py-12 text-center text-sm text-slate-500"
+                  >
+                    {responseData.snapshot
+                      ? "No real responses yet for this form."
+                      : "Publish the form to start collecting responses."}
+                  </td>
+                </tr>
+              ) : null}
             </tbody>
           </table>
         </div>
         <div className="p-4 border-t border-white/10 flex items-center justify-between text-sm text-slate-500">
-          <span>Showing 1 to 4 of 142 entries</span>
+          <span>
+            Showing {submissions.length} of {responseData.stats.totalResponses} responses
+          </span>
           <div className="flex gap-2">
             <button className="px-3 py-1 rounded-md hover:bg-white/5 disabled:opacity-50" disabled>Previous</button>
-            <button className="px-3 py-1 rounded-md hover:bg-white/5">Next</button>
+            <button className="px-3 py-1 rounded-md hover:bg-white/5 disabled:opacity-50" disabled>
+              Next
+            </button>
           </div>
         </div>
       </div>

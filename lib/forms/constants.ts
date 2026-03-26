@@ -28,3 +28,4 @@ export const DEFAULT_FORM_TITLE = "Untitled form";
 export const DEFAULT_FORM_DESCRIPTION = "";
 export const MAX_DASHBOARD_FORMS = 50;
 export const MAX_FORM_FIELDS = 100;
+export const MAX_FORM_RESPONSES = 50;
