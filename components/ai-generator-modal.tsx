@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { useMutation } from 'convex/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -9,6 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Sparkles, Loader2, RefreshCw, Check, Edit, Zap } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { api } from '@/convex/_generated/api'
 import { useToast } from '@/hooks/use-toast'
 
 interface AIGeneratorModalProps {
@@ -23,6 +26,8 @@ export function AIGeneratorModal({ isOpen, onClose }: AIGeneratorModalProps) {
   const [showPreview, setShowPreview] = useState(false)
   const [spec, setSpec] = useState<any | null>(null)
   const { toast } = useToast()
+  const router = useRouter()
+  const createFromSpec = useMutation(api.forms.createFromSpec)
 
   const generationSteps = [
     'Analyzing your description...',
@@ -73,19 +78,21 @@ export function AIGeneratorModal({ isOpen, onClose }: AIGeneratorModalProps) {
 
   const handleAccept = async () => {
     if (!spec) return
-    // Create draft form server-side via a POST to a forms endpoint
     try {
-      const res = await fetch('/api/forms', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ spec })
+      const formId = await createFromSpec({
+        spec: {
+          title: spec.title,
+          description: spec.description ?? '',
+          fields: (spec.fields ?? []).map((field: any) => ({
+            type: field.type,
+            label: field.label,
+            placeholder: field.placeholder ?? '',
+            required: field.required ?? false,
+            options: field.options ?? [],
+          })),
+        },
       })
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}))
-        throw new Error(body.error || 'Failed to create form')
-      }
-      const { formId } = await res.json()
-      window.location.href = `/editor/${formId}`
+      router.push(`/editor/${formId}`)
     } catch (err: any) {
       toast({ title: 'Failed to create form', description: err?.message ?? 'Please try again', variant: 'destructive' as any })
     }

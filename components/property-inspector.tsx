@@ -15,6 +15,7 @@ import { Settings, Type, Palette, Eye, Plus, Trash2, AlertCircle } from 'lucide-
 interface PropertyInspectorProps {
   formTitle: string
   formDescription: string
+  allowMultiple: boolean
   activeField: any
   onFormTitleChange: (title: string) => void
   onFormDescriptionChange: (description: string) => void
@@ -25,6 +26,7 @@ interface PropertyInspectorProps {
 export function PropertyInspector({
   formTitle,
   formDescription,
+  allowMultiple,
   activeField,
   onFormTitleChange,
   onFormDescriptionChange,
@@ -114,7 +116,7 @@ export function PropertyInspector({
                      <Label className="text-white">Allow Multiple Responses</Label>
                      <p className="text-xs text-slate-400">Users can submit multiple times</p>
                    </div>
-                  <Switch onCheckedChange={(checked) => onAllowMultipleChange?.(checked)} />
+                  <Switch checked={allowMultiple} onCheckedChange={(checked) => onAllowMultipleChange?.(checked)} />
                  </div>
 
                 <div className="flex items-center justify-between">

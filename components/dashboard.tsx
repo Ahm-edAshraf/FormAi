@@ -2,6 +2,7 @@
 
 import { useAuth, useClerk } from '@clerk/nextjs'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMutation, useQuery } from 'convex/react'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -10,24 +11,24 @@ import { Progress } from '@/components/ui/progress'
 import { Input } from '@/components/ui/input'
 import { Plus, Search, MoreHorizontal, Eye, Edit, Trash2, BarChart3, Users, Zap, Crown, Sparkles, LogOut } from 'lucide-react'
 import { AIGeneratorModal } from '@/components/ai-generator-modal'
-import { createClient as createSupabaseBrowser } from '@/utils/supabase/client'
+import { api } from '@/convex/_generated/api'
 import { useToast } from '@/hooks/use-toast'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { useRouter } from 'next/navigation'
 import { MobileNav } from '@/components/mobile-nav'
+import { mapDashboardRows } from '@/lib/forms'
 
 export function Dashboard({ initialRows, initialTotals }: { initialRows?: any[]; initialTotals?: { totalForms: number; totalSubmissions: number; totalViews: number; conversionRate: number } } = {}) {
   const [showAIModal, setShowAIModal] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedQuery, setDebouncedQuery] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [rows, setRows] = useState<any[]>(initialRows ?? [])
-  const [totals, setTotals] = useState(initialTotals ?? { totalForms: 0, totalSubmissions: 0, totalViews: 0, conversionRate: 0 })
   const { toast } = useToast()
   const isMobile = useIsMobile()
   const router = useRouter()
   const clerk = useClerk()
   const { userId } = useAuth()
+  const summary = useQuery(api.forms.dashboardSummary, userId ? {} : 'skip')
+  const deleteForm = useMutation(api.forms.deleteMine)
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQuery(searchQuery), 250)
@@ -48,69 +49,12 @@ export function Dashboard({ initialRows, initialTotals }: { initialRows?: any[];
     } catch {}
   }, [isMobile, toast])
 
-  useEffect(() => {
-    if (initialRows) {
-      setLoading(false)
-      return
-    }
-    ;(async () => {
-      try {
-        setLoading(true)
-        const supabase = createSupabaseBrowser()
-        if (!userId) {
-          toast({ title: 'Please sign in', description: 'Sign in to view your dashboard.' })
-          return
-        }
-        const { data: forms, error } = await supabase
-          .from('forms')
-          .select('id,title,description,status,slug,created_at')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false })
-        if (error) throw error
-        // Count submissions per form in parallel
-        const counts = await Promise.all(
-          (forms ?? []).map(async (f) => {
-            const { count } = await supabase
-              .from('submissions')
-              .select('id', { count: 'exact', head: true })
-              .eq('form_id', f.id)
-            return { formId: f.id, count: count ?? 0 }
-          })
-        )
-        // Count views per form
-        const viewCounts = await Promise.all(
-          (forms ?? []).map(async (f) => {
-            const { count } = await supabase
-              .from('form_views')
-              .select('id', { count: 'exact', head: true })
-              .eq('form_id', f.id)
-            return { formId: f.id, count: count ?? 0 }
-          })
-        )
-
-        const rows = (forms ?? []).map((f) => ({
-          id: f.id,
-          title: f.title,
-          description: f.description ?? '',
-          status: f.status,
-          slug: f.slug,
-          createdAt: new Date(f.created_at).toISOString().slice(0, 10),
-          submissions: counts.find((c) => c.formId === f.id)?.count ?? 0,
-          views: viewCounts.find((v) => v.formId === f.id)?.count ?? 0,
-          isAIGenerated: true,
-        }))
-        setRows(rows)
-        const totalSubmissions = rows.reduce((acc, r) => acc + r.submissions, 0)
-        const totalViews = rows.reduce((acc, r) => acc + r.views, 0)
-        const conversionRate = totalViews > 0 ? Math.round((totalSubmissions / totalViews) * 100) : 0
-        setTotals({ totalForms: rows.length, totalSubmissions, totalViews, conversionRate })
-      } catch (err: any) {
-        toast({ title: 'Failed to load dashboard', description: err?.message ?? 'Please try again', variant: 'destructive' as any })
-      } finally {
-        setLoading(false)
-      }
-    })()
-  }, [toast, initialRows, userId])
+  const loading = !initialRows && summary === undefined
+  const rows = useMemo(() => initialRows ?? mapDashboardRows(summary?.rows ?? []), [initialRows, summary])
+  const totals = useMemo(
+    () => initialTotals ?? summary?.totals ?? { totalForms: 0, totalSubmissions: 0, totalViews: 0, conversionRate: 0 },
+    [initialTotals, summary]
+  )
 
   const usage = useMemo(() => ({
     formsUsed: totals.totalForms,
@@ -325,12 +269,7 @@ export function Dashboard({ initialRows, initialTotals }: { initialRows?: any[];
                       <Button size="sm" variant="ghost" className="text-red-400 hover:text-red-300" title="Delete form" onClick={async () => {
                         if (!confirm('Delete this form? This cannot be undone.')) return
                         try {
-                          const res = await fetch(`/api/forms/${form.id}`, { method: 'DELETE' })
-                          if (!res.ok) {
-                            const body = await res.json().catch(() => ({}))
-                            throw new Error(body.error || 'Delete failed')
-                          }
-                          setRows(rows.filter(r => r.id !== form.id))
+                          await deleteForm({ formId: form.id })
                           toast({ title: 'Form deleted' })
                         } catch (err: any) {
                           toast({ title: 'Delete failed', description: err?.message ?? 'Please try again', variant: 'destructive' as any })

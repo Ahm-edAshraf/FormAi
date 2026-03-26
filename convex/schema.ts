@@ -24,6 +24,8 @@ export default defineSchema({
     status: formStatus,
     slug: v.optional(v.string()),
     allowMultipleResponses: v.optional(v.boolean()),
+    lastMetaSaveId: v.optional(v.number()),
+    lastFieldSaveId: v.optional(v.number()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -45,18 +47,24 @@ export default defineSchema({
 
   submissions: defineTable({
     formId: v.id('forms'),
+    ownerUserId: v.optional(v.string()),
     userId: v.optional(v.string()),
     visitorToken: v.optional(v.string()),
     data: v.any(),
     createdAt: v.number(),
-  }).index('by_form_id_and_created_at', ['formId', 'createdAt']),
+  })
+    .index('by_form_id_and_created_at', ['formId', 'createdAt'])
+    .index('by_owner_user_id_and_created_at', ['ownerUserId', 'createdAt']),
 
   formViews: defineTable({
     formId: v.id('forms'),
+    ownerUserId: v.optional(v.string()),
     userId: v.optional(v.string()),
     visitorToken: v.optional(v.string()),
     createdAt: v.number(),
-  }).index('by_form_id', ['formId']),
+  })
+    .index('by_form_id', ['formId'])
+    .index('by_owner_user_id_and_created_at', ['ownerUserId', 'createdAt']),
 
   aiGenerations: defineTable({
     userId: v.string(),
@@ -97,4 +105,17 @@ export default defineSchema({
     payload: v.any(),
     createdAt: v.number(),
   }).index('by_user_id_and_created_at', ['userId', 'createdAt']),
+
+  fileUploads: defineTable({
+    storageId: v.id('_storage'),
+    formId: v.id('forms'),
+    ownerUserId: v.string(),
+    fieldId: v.string(),
+    fileName: v.string(),
+    contentType: v.optional(v.string()),
+    size: v.number(),
+    createdAt: v.number(),
+  })
+    .index('by_storage_id', ['storageId'])
+    .index('by_owner_user_id', ['ownerUserId']),
 })

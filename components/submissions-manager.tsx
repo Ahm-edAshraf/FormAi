@@ -126,8 +126,8 @@ export function SubmissionsManager({ formId }: SubmissionsManagerProps) {
     for (const r of rows) {
       for (const [key, value] of Object.entries(r.data || {})) {
         const pushItem = (val: any) => {
-          const link = typeof val === 'string' ? val : (val?.url || '')
-          if (!/^https?:\/\//i.test(link)) return
+          const link = typeof val === 'string' ? val : (val?.url || (val?.storageId ? `/api/files/${val.storageId}` : ''))
+          if (!/^https?:\/\//i.test(link) && !link.startsWith('/api/files/')) return
           const lower = link.toLowerCase()
           const isImage = /\.(png|jpe?g|gif|webp)$/i.test(lower)
           const name = decodeURIComponent((typeof val === 'string' ? link : (val?.name || link.split('/').pop())) || 'file')

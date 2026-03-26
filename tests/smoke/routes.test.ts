@@ -13,7 +13,7 @@ function createQueryResult() {
     in: async () => ({ count: 0 }),
     order: () => ({ data: [], single: async () => ({ data: mockPublicForm }) }),
     single: async () => ({ data: mockPublicForm }),
-    then(resolve: (value: { data: [] }) => unknown) {
+    then(resolve: (value: { data: unknown[] }) => unknown) {
       return Promise.resolve({ data: [] }).then(resolve)
     },
   }
@@ -33,6 +33,10 @@ vi.mock('@clerk/nextjs/server', () => ({
 
 vi.mock('next/cache', () => ({
   unstable_cache: (fn: (...args: unknown[]) => unknown) => fn,
+}))
+
+vi.mock('convex/nextjs', () => ({
+  fetchQuery: async (_fn: unknown, args: { slug?: string }) => (args.slug === 'missing-form' ? null : mockPublicForm),
 }))
 
 vi.mock('@/utils/supabase/server', () => ({

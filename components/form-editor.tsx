@@ -1,6 +1,7 @@
 'use client'
 
 import { useAuth } from '@clerk/nextjs'
+import { useMutation, useQuery } from 'convex/react'
 import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/core'
@@ -20,7 +21,9 @@ import { PropertyInspector } from '@/components/property-inspector'
 import { useToast } from '@/hooks/use-toast'
 import { useRouter } from 'next/navigation'
 import { MobileNav } from '@/components/mobile-nav'
-import { fetchFormWithFields as fetchFormWithFieldsClient, saveFields, saveFormMeta } from '@/lib/data/forms.client'
+import { api } from '@/convex/_generated/api'
+import type { Id } from '@/convex/_generated/dataModel'
+import { areEditorFieldsEquivalent, mapConvexFieldsToEditorFields, seedClientSaveId, shouldApplyServerFields, shouldHydrateBooleanValue, shouldHydrateEditorFields, shouldHydrateTextValue, toConvexFieldInput, type EditorField } from '@/lib/forms'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { useEffect as ReactUseEffect } from 'react'
 
@@ -35,7 +38,7 @@ export function FormEditor({ formId }: FormEditorProps) {
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop')
   const [activeFieldId, setActiveFieldId] = useState<string | null>(null)
   const [draggedField, setDraggedField] = useState<any>(null)
-  const [formFields, setFormFields] = useState<any[]>([])
+  const [formFields, setFormFields] = useState<EditorField[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [publishedSlug, setPublishedSlug] = useState<string | null>(null)
@@ -45,6 +48,11 @@ export function FormEditor({ formId }: FormEditorProps) {
   const { toast } = useToast()
   const router = useRouter()
   const { userId } = useAuth()
+  const convexFormId = formId as Id<'forms'>
+  const formData = useQuery(api.forms.getMine, userId ? { formId: convexFormId } : 'skip')
+  const saveMetaMutation = useMutation(api.forms.saveMeta)
+  const replaceFieldsMutation = useMutation(api.forms.replaceFields)
+  const publishMutation = useMutation(api.forms.publish)
 
   // Prefer mobile preview on small screens by default
   useEffect(() => {
@@ -55,35 +63,76 @@ export function FormEditor({ formId }: FormEditorProps) {
   }, [])
 
   useEffect(() => {
-    let mounted = true
-    ;(async () => {
-      try {
-        const { form, fields } = await fetchFormWithFieldsClient(formId)
-        if (!mounted) return
-        if (!userId) {
-          toast({ title: 'Please sign in', description: 'You must be signed in to edit forms.' })
-          router.replace('/dashboard')
-          return
-        }
-        if (form.user_id && form.user_id !== userId) {
-          toast({ title: 'Access denied', description: 'You are not the owner of this form.' })
-          router.replace('/dashboard')
-          return
-        }
-        setFormTitle(form.title || '')
-        setFormDescription(form.description || '')
-        setFormFields(fields || [])
-        setPublishedSlug(form.slug || null)
-        setAllowMultiple(form.allow_multiple_responses ?? true)
-      } catch (err: any) {
-        toast({ title: 'Failed to load form', description: err?.message ?? 'Please try again', variant: 'destructive' as any })
-        router.replace('/dashboard')
-      } finally {
-        if (mounted) setIsLoading(false)
+    if (!userId) {
+      return
+    }
+    if (formData === undefined) {
+      setIsLoading(true)
+      return
+    }
+    if (formData === null) {
+      toast({ title: 'Access denied', description: 'You are not the owner of this form.' })
+      router.replace('/dashboard')
+      return
+    }
+
+    const serverFields = mapConvexFieldsToEditorFields(formData.fields)
+    const serverTitle = formData.form.title || ''
+    const serverDescription = formData.form.description || ''
+    latestMetaSaveIdRef.current = Math.max(latestMetaSaveIdRef.current, seedClientSaveId(formData.form.lastMetaSaveId) - 1)
+    latestFieldRequestRef.current = Math.max(latestFieldRequestRef.current, seedClientSaveId(formData.form.lastFieldSaveId) - 1)
+    setFormTitle((current) => {
+      if (!hasHydratedTitleRef.current) {
+        hasHydratedTitleRef.current = true
+        lastPersistedTitleRef.current = serverTitle
+        return serverTitle
       }
-    })()
-    return () => { mounted = false }
-  }, [formId, router, toast, userId])
+      if (shouldHydrateTextValue({ currentValue: current, lastPersistedValue: lastPersistedTitleRef.current, serverValue: serverTitle })) {
+        lastPersistedTitleRef.current = serverTitle
+        return serverTitle
+      }
+      return current
+    })
+    setFormDescription((current) => {
+      if (!hasHydratedDescriptionRef.current) {
+        hasHydratedDescriptionRef.current = true
+        lastPersistedDescriptionRef.current = serverDescription
+        return serverDescription
+      }
+      if (shouldHydrateTextValue({ currentValue: current, lastPersistedValue: lastPersistedDescriptionRef.current, serverValue: serverDescription })) {
+        lastPersistedDescriptionRef.current = serverDescription
+        return serverDescription
+      }
+      return current
+    })
+    setFormFields((current) => {
+      if (!hasHydratedFieldsRef.current) {
+        hasHydratedFieldsRef.current = true
+        lastPersistedFieldsRef.current = serverFields
+        return serverFields
+      }
+      if (shouldHydrateEditorFields({ currentFields: current, lastPersistedFields: lastPersistedFieldsRef.current, serverFields })) {
+        lastPersistedFieldsRef.current = serverFields
+        return serverFields
+      }
+      return current
+    })
+    setPublishedSlug(formData.form.slug || null)
+    const serverAllowMultiple = formData.form.allowMultipleResponses ?? true
+    setAllowMultiple((current) => {
+      if (!hasHydratedAllowMultipleRef.current) {
+        hasHydratedAllowMultipleRef.current = true
+        lastPersistedAllowMultipleRef.current = serverAllowMultiple
+        return serverAllowMultiple
+      }
+      if (shouldHydrateBooleanValue({ currentValue: current, lastPersistedValue: lastPersistedAllowMultipleRef.current, serverValue: serverAllowMultiple })) {
+        lastPersistedAllowMultipleRef.current = serverAllowMultiple
+        return serverAllowMultiple
+      }
+      return current
+    })
+    setIsLoading(false)
+  }, [formData, router, toast, userId])
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event
@@ -97,7 +146,7 @@ export function FormEditor({ formId }: FormEditorProps) {
       // Add new field to form only if source is library card (id starts with field-type)
       if (String(active.id).startsWith('field-')) {
         const newField = {
-          id: crypto.randomUUID?.() || Date.now().toString(),
+          id: `local:${crypto.randomUUID?.() || Date.now().toString()}`,
           type: active.data.current?.type || 'text',
           label: active.data.current?.label || 'New Field',
           placeholder: '',
@@ -129,17 +178,35 @@ export function FormEditor({ formId }: FormEditorProps) {
 
   const metaDebounceRef = useRef<NodeJS.Timeout | null>(null)
   const fieldsDebounceRef = useRef<NodeJS.Timeout | null>(null)
+  const latestFieldRequestRef = useRef(0)
+  const lastPersistedFieldsRef = useRef<EditorField[]>([])
+  const lastPersistedTitleRef = useRef('')
+  const lastPersistedDescriptionRef = useRef('')
+  const lastPersistedAllowMultipleRef = useRef(true)
+  const latestMetaSaveIdRef = useRef(0)
+  const hasHydratedTitleRef = useRef(false)
+  const hasHydratedDescriptionRef = useRef(false)
+  const hasHydratedFieldsRef = useRef(false)
+  const hasHydratedAllowMultipleRef = useRef(false)
 
   useEffect(() => {
     if (isLoading) return
     if (metaDebounceRef.current) clearTimeout(metaDebounceRef.current)
     metaDebounceRef.current = setTimeout(async () => {
+      const clientSaveId = latestMetaSaveIdRef.current + 1
+      latestMetaSaveIdRef.current = clientSaveId
       try {
         setIsSaving(true)
-        await saveFormMeta(formId, { title: formTitle, description: formDescription || null, allow_multiple_responses: allowMultiple })
-        // Ensure server cache is fresh in case client and server caches diverge
-        fetch(`/api/forms/${formId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: formTitle, description: formDescription || null, allow_multiple_responses: allowMultiple }) })
-          .catch(() => {})
+        await saveMetaMutation({
+          formId: convexFormId,
+          title: formTitle,
+          description: formDescription || '',
+          allowMultipleResponses: allowMultiple,
+          clientSaveId,
+        })
+        lastPersistedTitleRef.current = formTitle
+        lastPersistedDescriptionRef.current = formDescription || ''
+        lastPersistedAllowMultipleRef.current = allowMultiple
       } catch (err: any) {
         toast({ title: 'Failed to save', description: err?.message ?? 'Please try again', variant: 'destructive' as any })
       } finally {
@@ -149,15 +216,27 @@ export function FormEditor({ formId }: FormEditorProps) {
     return () => {
       if (metaDebounceRef.current) clearTimeout(metaDebounceRef.current)
     }
-  }, [formTitle, formDescription, allowMultiple, formId, isLoading, toast])
+  }, [allowMultiple, convexFormId, formDescription, formTitle, isLoading, saveMetaMutation, toast])
 
   useEffect(() => {
     if (isLoading) return
     if (fieldsDebounceRef.current) clearTimeout(fieldsDebounceRef.current)
     fieldsDebounceRef.current = setTimeout(async () => {
+      const requestId = latestFieldRequestRef.current + 1
+      latestFieldRequestRef.current = requestId
       try {
         setIsSaving(true)
-        await saveFields(formId, formFields.map((f, idx) => ({ ...f, position: idx })))
+        const saved = await replaceFieldsMutation({
+          formId: convexFormId,
+          fields: toConvexFieldInput(formFields),
+          clientSaveId: requestId,
+        })
+        if (!shouldApplyServerFields({ requestId, latestRequestId: latestFieldRequestRef.current })) {
+          return
+        }
+        const nextFields = mapConvexFieldsToEditorFields(saved)
+        lastPersistedFieldsRef.current = nextFields
+        setFormFields((current) => (areEditorFieldsEquivalent(current, nextFields) ? current : nextFields))
       } catch (err: any) {
         toast({ title: 'Failed to save fields', description: err?.message ?? 'Please try again', variant: 'destructive' as any })
       } finally {
@@ -167,14 +246,34 @@ export function FormEditor({ formId }: FormEditorProps) {
     return () => {
       if (fieldsDebounceRef.current) clearTimeout(fieldsDebounceRef.current)
     }
-  }, [formFields, formId, isLoading, toast])
+  }, [convexFormId, formFields, isLoading, replaceFieldsMutation, toast])
 
   const handleSave = async () => {
-    try {
-      setIsSaving(true)
-      await saveFormMeta(formId, { title: formTitle, description: formDescription || null, allow_multiple_responses: allowMultiple })
-      await saveFields(formId, formFields.map((f, idx) => ({ ...f, position: idx })))
-      toast({ title: 'Saved', description: 'Your changes have been saved.' })
+      try {
+        setIsSaving(true)
+        const metaSaveId = latestMetaSaveIdRef.current + 1
+        latestMetaSaveIdRef.current = metaSaveId
+        await saveMetaMutation({
+          formId: convexFormId,
+          title: formTitle,
+          description: formDescription || '',
+          allowMultipleResponses: allowMultiple,
+          clientSaveId: metaSaveId,
+        })
+        lastPersistedTitleRef.current = formTitle
+        lastPersistedDescriptionRef.current = formDescription || ''
+        lastPersistedAllowMultipleRef.current = allowMultiple
+        const fieldSaveId = latestFieldRequestRef.current + 1
+        latestFieldRequestRef.current = fieldSaveId
+        const saved = await replaceFieldsMutation({
+          formId: convexFormId,
+          fields: toConvexFieldInput(formFields),
+          clientSaveId: fieldSaveId,
+        })
+        const nextFields = mapConvexFieldsToEditorFields(saved)
+        lastPersistedFieldsRef.current = nextFields
+        setFormFields((current) => (areEditorFieldsEquivalent(current, nextFields) ? current : nextFields))
+        toast({ title: 'Saved', description: 'Your changes have been saved.' })
     } catch (err: any) {
       toast({ title: 'Save failed', description: err?.message ?? 'Please try again', variant: 'destructive' as any })
     } finally {
@@ -183,22 +282,33 @@ export function FormEditor({ formId }: FormEditorProps) {
   }
 
   const handlePublish = async () => {
-    try {
-      setIsSaving(true)
-      await saveFormMeta(formId, { title: formTitle, description: formDescription || null, allow_multiple_responses: allowMultiple })
-      await saveFields(formId, formFields.map((f, idx) => ({ ...f, position: idx })))
-      const res = await fetch(`/api/forms/${formId}/publish`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ slug: formTitle })
-      })
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}))
-        throw new Error(body.error || 'Failed to publish')
-      }
-      const { slug } = await res.json()
-      toast({ title: 'Published', description: `Form published at /f/${slug}` })
-      setPublishedSlug(slug)
+      try {
+        setIsSaving(true)
+        const metaSaveId = latestMetaSaveIdRef.current + 1
+        latestMetaSaveIdRef.current = metaSaveId
+        await saveMetaMutation({
+          formId: convexFormId,
+          title: formTitle,
+          description: formDescription || '',
+          allowMultipleResponses: allowMultiple,
+          clientSaveId: metaSaveId,
+        })
+        lastPersistedTitleRef.current = formTitle
+        lastPersistedDescriptionRef.current = formDescription || ''
+        lastPersistedAllowMultipleRef.current = allowMultiple
+        const fieldSaveId = latestFieldRequestRef.current + 1
+        latestFieldRequestRef.current = fieldSaveId
+        const saved = await replaceFieldsMutation({
+          formId: convexFormId,
+          fields: toConvexFieldInput(formFields),
+          clientSaveId: fieldSaveId,
+        })
+        const nextFields = mapConvexFieldsToEditorFields(saved)
+        lastPersistedFieldsRef.current = nextFields
+        setFormFields((current) => (areEditorFieldsEquivalent(current, nextFields) ? current : nextFields))
+        const slug = await publishMutation({ formId: convexFormId, desiredSlug: formTitle })
+        toast({ title: 'Published', description: `Form published at /f/${slug}` })
+        setPublishedSlug(slug)
       // Auto-copy to clipboard
       const url = `${window.location.origin}/f/${slug}`
       navigator.clipboard.writeText(url).catch(() => {})
@@ -206,8 +316,8 @@ export function FormEditor({ formId }: FormEditorProps) {
       toast({ title: 'Publish failed', description: err?.message ?? 'Please try again', variant: 'destructive' as any })
     } finally {
       setIsSaving(false)
+      }
     }
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -317,6 +427,7 @@ export function FormEditor({ formId }: FormEditorProps) {
                       <PropertyInspector
                         formTitle={formTitle}
                         formDescription={formDescription}
+                        allowMultiple={allowMultiple}
                         activeField={formFields.find(field => field.id === activeFieldId)}
                         onFormTitleChange={setFormTitle}
                         onFormDescriptionChange={setFormDescription}
@@ -378,6 +489,7 @@ export function FormEditor({ formId }: FormEditorProps) {
             <PropertyInspector
               formTitle={formTitle}
               formDescription={formDescription}
+              allowMultiple={allowMultiple}
               activeField={formFields.find(field => field.id === activeFieldId)}
               onFormTitleChange={setFormTitle}
               onFormDescriptionChange={setFormDescription}
