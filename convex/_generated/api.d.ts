@@ -8,13 +8,27 @@
  * @module
  */
 
+import type * as formFields from "../formFields.js";
+import type * as forms from "../forms.js";
+import type * as lib_auth from "../lib/auth.js";
+import type * as lib_forms from "../lib/forms.js";
+import type * as users from "../users.js";
+import type * as workspaces from "../workspaces.js";
+
 import type {
   ApiFromModules,
   FilterApi,
   FunctionReference,
 } from "convex/server";
 
-declare const fullApi: ApiFromModules<{}>;
+declare const fullApi: ApiFromModules<{
+  formFields: typeof formFields;
+  forms: typeof forms;
+  "lib/auth": typeof lib_auth;
+  "lib/forms": typeof lib_forms;
+  users: typeof users;
+  workspaces: typeof workspaces;
+}>;
 
 /**
  * A utility for referencing Convex functions in your app's public API.

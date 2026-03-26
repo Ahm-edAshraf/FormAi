@@ -1,152 +1,249 @@
-const signals = [
-  {
-    label: "Prompt to draft",
-    value: "19 sec",
-    note: "From idea to a structured first version.",
-  },
-  {
-    label: "Snapshot discipline",
-    value: "Versioned",
-    note: "Drafts stay editable while published forms stay stable.",
-  },
-  {
-    label: "Workspace aware",
-    value: "Clerk orgs",
-    note: "Personal and team spaces share one operating model.",
-  },
-];
+import { ArrowRight, Blocks, Shield, Sparkles, Terminal, Zap } from "lucide-react";
+import Link from "next/link";
 
-const steps = [
-  "Describe the intake flow in plain English.",
-  "Review the generated structure before it touches production.",
-  "Publish a clean snapshot and track responses in one place.",
+const features = [
+  {
+    icon: <Sparkles className="h-5 w-5 text-indigo-400" />,
+    title: "Natural Language Generation",
+    description: "Describe your ideal form in plain English. Our AI understands context, constraints, and edge cases to build the perfect structure.",
+  },
+  {
+    icon: <Shield className="h-5 w-5 text-emerald-400" />,
+    title: "Strict Schema Enforcement",
+    description: "No hallucinations. The AI output is strictly bound to a predefined schema, ensuring every generated form is immediately usable.",
+  },
+  {
+    icon: <Blocks className="h-5 w-5 text-blue-400" />,
+    title: "Immutable Snapshots",
+    description: "Publish with confidence. Live forms are frozen in time, allowing you to iterate on drafts without breaking production.",
+  },
 ];
 
 export default function MarketingPage() {
   return (
-    <main className="relative isolate min-h-screen overflow-hidden bg-[#f3eadb] text-[#221c16]">
-      <div className="absolute inset-x-0 top-0 h-48 bg-[radial-gradient(circle_at_top,rgba(117,77,36,0.16),transparent_60%)]" />
-      <div className="absolute inset-y-0 right-0 hidden w-1/3 bg-[linear-gradient(180deg,rgba(34,28,22,0.03),rgba(34,28,22,0))] lg:block" />
-      <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 pb-12 pt-6 sm:px-10 lg:px-12">
-        <header className="flex items-center justify-between border-b border-black/10 pb-5">
-          <div>
-            <p className="font-mono text-[11px] uppercase tracking-[0.35em] text-[#6c5945]">
-              FormAI issue no. 01
-            </p>
-            <h1 className="mt-2 text-2xl font-medium tracking-[0.08em] text-[#1d1711] sm:text-3xl">
-              FormAI
-            </h1>
-          </div>
-          <div className="hidden text-right sm:block">
-            <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-[#8b735e]">
-              Prompt, edit, publish
-            </p>
-            <p className="mt-2 max-w-xs text-sm leading-6 text-[#5e5041]">
-              A quieter form builder for teams that want structure before polish.
-            </p>
-          </div>
-        </header>
-
-        <section className="grid flex-1 gap-10 py-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-14 lg:py-14">
-          <div className="space-y-8">
-            <div className="space-y-5">
-              <p className="font-mono text-[11px] uppercase tracking-[0.35em] text-[#8b735e]">
-                Editorial product preview
-              </p>
-              <div className="space-y-4">
-                <h2 className="font-[family:var(--font-editorial)] text-6xl leading-[0.9] font-semibold tracking-[-0.04em] text-[#1d1711] sm:text-7xl lg:text-8xl">
-                  Draft forms like you are editing a first-class document.
-                </h2>
-                <p className="max-w-2xl text-lg leading-8 text-[#4d4033] sm:text-xl">
-                  FormAI starts with a prompt, keeps the draft human-readable, and ships a publishable snapshot without turning the builder into a puzzle box.
-                </p>
-              </div>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-3">
-              {signals.map((signal) => (
-                <article
-                  key={signal.label}
-                  className="rounded-[1.5rem] border border-black/10 bg-[#f8f1e6]/80 p-4 shadow-[0_1px_0_rgba(34,28,22,0.08)] backdrop-blur"
-                >
-                  <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-[#8b735e]">
-                    {signal.label}
-                  </p>
-                  <p className="mt-4 font-[family:var(--font-editorial)] text-3xl font-semibold text-[#201913]">
-                    {signal.value}
-                  </p>
-                  <p className="mt-3 text-sm leading-6 text-[#5e5041]">{signal.note}</p>
-                </article>
-              ))}
-            </div>
-          </div>
-
-          <section className="relative rounded-[2rem] border border-black/10 bg-[#201913] p-5 text-[#f5ecdf] shadow-[0_30px_80px_rgba(34,28,22,0.18)] sm:p-7">
-            <div className="absolute inset-x-8 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(243,234,219,0.7),transparent)]" />
-            <div className="grid gap-5 lg:grid-cols-[0.95fr_1.05fr]">
-              <div className="rounded-[1.6rem] border border-white/10 bg-white/5 p-5">
-                <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-[#d0b89d]">
-                  Product flow
-                </p>
-                <ol className="mt-6 space-y-4">
-                  {steps.map((step, index) => (
-                    <li key={step} className="flex gap-3">
-                      <span className="font-mono text-xs text-[#d0b89d]">0{index + 1}</span>
-                      <p className="text-sm leading-6 text-[#f5ecdf]">{step}</p>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-
-              <div className="rounded-[1.6rem] bg-[#f5ecdf] p-5 text-[#221c16]">
-                <div className="flex items-center justify-between border-b border-black/10 pb-3">
-                  <div>
-                    <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-[#8b735e]">
-                      Live draft
-                    </p>
-                    <p className="mt-2 font-[family:var(--font-editorial)] text-3xl font-semibold">
-                      Customer research intake
-                    </p>
-                  </div>
-                  <span className="rounded-full border border-black/10 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.18em] text-[#6c5945]">
-                    Draft v0.3
-                  </span>
-                </div>
-
-                <div className="mt-5 space-y-4">
-                  <div className="rounded-[1.25rem] border border-black/10 bg-white/60 p-4">
-                    <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-[#8b735e]">
-                      Opening question
-                    </p>
-                    <p className="mt-3 text-base font-medium">What are you hoping to learn from this interview?</p>
-                    <p className="mt-2 text-sm leading-6 text-[#5e5041]">
-                      Short answer, required, visible in both draft and published snapshot.
-                    </p>
-                  </div>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="rounded-[1.25rem] border border-dashed border-black/15 bg-[#efe3d1] p-4">
-                      <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-[#8b735e]">
-                        AI suggestion
-                      </p>
-                      <p className="mt-3 text-sm leading-6 text-[#4d4033]">
-                        Add one required rating field to measure confidence in the current workflow.
-                      </p>
-                    </div>
-                    <div className="rounded-[1.25rem] border border-black/10 bg-[#221c16] p-4 text-[#f5ecdf]">
-                      <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-[#d0b89d]">
-                        Publish snapshot
-                      </p>
-                      <p className="mt-3 text-sm leading-6 text-[#f1e4d2]">
-                        Freeze the structure, issue a shareable URL, and preserve the editable draft for the next pass.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-        </section>
+    <main className="relative min-h-screen bg-[#050505] text-slate-200 selection:bg-indigo-500/30 overflow-hidden font-sans">
+      {/* Background Effects */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-600/20 blur-[120px]" />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-600/20 blur-[120px]" />
+        <div className="absolute top-[40%] left-[60%] w-[30%] h-[30%] rounded-full bg-emerald-600/10 blur-[100px]" />
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_10%,transparent_100%)]" />
       </div>
+
+      {/* Header */}
+      <header className="relative z-10 flex items-center justify-between px-6 py-6 max-w-7xl mx-auto">
+        <div className="flex items-center gap-3">
+          <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-b from-indigo-500 to-blue-600 shadow-[0_0_20px_rgba(99,102,241,0.4)]">
+            <div className="absolute inset-[1px] rounded-[11px] bg-[#050505] flex items-center justify-center">
+              <Sparkles className="h-5 w-5 text-indigo-400" />
+            </div>
+          </div>
+          <span className="font-bold text-xl tracking-tight text-white">FormAI</span>
+        </div>
+        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
+          <Link href="#features" className="hover:text-white transition-colors">Features</Link>
+          <Link href="#how-it-works" className="hover:text-white transition-colors">How it works</Link>
+          <Link href="#pricing" className="hover:text-white transition-colors">Pricing</Link>
+        </nav>
+        <div className="flex items-center gap-4">
+          <Link href="/sign-in" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
+            Sign in
+          </Link>
+          <Link 
+            href="/dashboard" 
+            className="group relative inline-flex h-10 items-center justify-center overflow-hidden rounded-full bg-white px-6 font-medium text-black transition-all hover:scale-105"
+          >
+            <span className="relative z-10 flex items-center gap-2">
+              Get Started <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </span>
+          </Link>
+        </div>
+      </header>
+
+      {/* Hero Section */}
+      <section className="relative z-10 pt-32 pb-20 px-6 max-w-7xl mx-auto text-center">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-sm text-indigo-300 mb-8 backdrop-blur-md">
+          <Zap className="h-4 w-4" />
+          <span>FormAI v2.0 is now live</span>
+        </div>
+        
+        <h1 className="max-w-5xl mx-auto text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter leading-[1.1] text-white mb-8">
+          The intelligence of AI. <br />
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-blue-400 to-emerald-400">
+            The precision of code.
+          </span>
+        </h1>
+        
+        <p className="max-w-2xl mx-auto text-lg md:text-xl text-slate-400 mb-12 leading-relaxed">
+          Turn a rough prompt into a live form system that already makes sense. 
+          Generate clean drafts, refine fields, and publish immutable snapshots in seconds.
+        </p>
+
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <Link 
+            href="/dashboard" 
+            className="group relative inline-flex h-14 items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-indigo-500 to-blue-600 px-8 text-base font-medium text-white transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(99,102,241,0.4)]"
+          >
+            <span className="relative z-10 flex items-center gap-2">
+              Start building for free <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </span>
+          </Link>
+          <Link 
+            href="#demo" 
+            className="inline-flex h-14 items-center justify-center rounded-full border border-white/10 bg-white/5 px-8 text-base font-medium text-white backdrop-blur-md transition-colors hover:bg-white/10"
+          >
+            View Demo
+          </Link>
+        </div>
+      </section>
+
+      {/* Interactive Terminal Showcase */}
+      <section className="relative z-10 max-w-5xl mx-auto px-6 pb-32">
+        <div className="relative rounded-2xl border border-white/10 bg-[#0A0A0A]/80 backdrop-blur-2xl shadow-2xl overflow-hidden">
+          {/* Terminal Header */}
+          <div className="flex items-center px-4 py-3 border-b border-white/10 bg-white/[0.02]">
+            <div className="flex gap-2">
+              <div className="w-3 h-3 rounded-full bg-red-500/80" />
+              <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
+              <div className="w-3 h-3 rounded-full bg-green-500/80" />
+            </div>
+            <div className="mx-auto flex items-center gap-2 text-xs text-slate-500 font-mono">
+              <Terminal className="h-3 w-3" />
+              <span>form-ai-generation.ts</span>
+            </div>
+          </div>
+          
+          {/* Terminal Body */}
+          <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-white/10">
+            <div className="p-6 md:p-8 space-y-6">
+              <div>
+                <p className="text-xs font-mono text-indigo-400 mb-2 uppercase tracking-wider">Input Prompt</p>
+                <div className="p-4 rounded-xl bg-white/5 border border-white/5 text-sm text-slate-300 leading-relaxed">
+                  &quot;I need a feedback form for our new SaaS product. Ask for their role, what they liked most, what was confusing, and a 1-10 rating of the overall experience.&quot;
+                </div>
+              </div>
+              <div className="flex items-center gap-3 text-sm text-slate-500 font-mono">
+                <div className="h-px flex-1 bg-white/10" />
+                <span>Processing via Groq</span>
+                <div className="h-px flex-1 bg-white/10" />
+              </div>
+              <div>
+                <p className="text-xs font-mono text-emerald-400 mb-2 uppercase tracking-wider">Generated Schema</p>
+                <pre className="p-4 rounded-xl bg-black/50 border border-white/5 text-xs text-emerald-300/80 font-mono overflow-x-auto">
+                  <code>{`{
+  "title": "SaaS Product Feedback",
+  "fields": [
+    {
+      "type": "select",
+      "label": "What is your role?",
+      "options": ["Developer", "Designer", "Manager"]
+    },
+    {
+      "type": "textarea",
+      "label": "What did you like most?"
+    },
+    {
+      "type": "rating",
+      "label": "Overall Experience (1-10)",
+      "required": true
+    }
+  ]
+}`}</code>
+                </pre>
+              </div>
+            </div>
+            
+            <div className="p-6 md:p-8 bg-gradient-to-br from-indigo-500/5 to-blue-500/5">
+              <p className="text-xs font-mono text-blue-400 mb-6 uppercase tracking-wider">Live Preview</p>
+              <div className="space-y-5 bg-[#0F0F11] border border-white/10 rounded-xl p-6 shadow-xl">
+                <div>
+                  <h3 className="text-lg font-medium text-white mb-1">SaaS Product Feedback</h3>
+                  <p className="text-sm text-slate-400">Help us improve our new product.</p>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-300">What is your role?</label>
+                    <div className="h-10 rounded-lg border border-white/10 bg-white/5 flex items-center px-3 text-sm text-slate-400">
+                      Select an option...
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-300">What did you like most?</label>
+                    <div className="h-24 rounded-lg border border-white/10 bg-white/5 p-3 text-sm text-slate-400">
+                      Type your answer here...
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-300 flex items-center gap-1">
+                      Overall Experience <span className="text-red-400">*</span>
+                    </label>
+                    <div className="flex gap-2">
+                      {[1, 2, 3, 4, 5].map((i) => (
+                        <div key={i} className="w-8 h-8 rounded-md border border-white/10 bg-white/5 flex items-center justify-center text-xs text-slate-400">
+                          {i}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                
+                <button className="w-full h-10 rounded-lg bg-white text-black font-medium text-sm mt-4">
+                  Submit Feedback
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Grid */}
+      <section id="features" className="relative z-10 py-24 px-6 max-w-7xl mx-auto border-t border-white/10">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-5xl font-bold text-white mb-4 tracking-tight">Built for modern teams</h2>
+          <p className="text-slate-400 max-w-2xl mx-auto text-lg">
+            Everything you need to create, publish, and analyze forms, without the bloat.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6">
+          {features.map((feature, idx) => (
+            <div key={idx} className="group relative p-8 rounded-3xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors">
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative z-10">
+                <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-6">
+                  {feature.icon}
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-3">{feature.title}</h3>
+                <p className="text-slate-400 leading-relaxed">
+                  {feature.description}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="relative z-10 border-t border-white/10 bg-[#050505] py-12 px-6">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-indigo-400" />
+            <span className="font-semibold text-white">FormAI</span>
+          </div>
+          <p className="text-sm text-slate-500">
+            © 2026 FormAI Inc. All rights reserved.
+          </p>
+          <div className="flex gap-6 text-sm text-slate-500">
+            <Link href="#" className="hover:text-white transition-colors">Twitter</Link>
+            <Link href="#" className="hover:text-white transition-colors">GitHub</Link>
+            <Link href="#" className="hover:text-white transition-colors">Discord</Link>
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }
