@@ -247,17 +247,7 @@ export const FORM_GENERATION_JSON_SCHEMA = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: [
-          "type",
-          "label",
-          "description",
-          "placeholder",
-          "isRequired",
-          "width",
-          "options",
-          "validation",
-          "settings",
-        ],
+        required: ["type", "label", "description", "placeholder", "isRequired", "options"],
         properties: {
           type: {
             type: "string",
@@ -267,10 +257,6 @@ export const FORM_GENERATION_JSON_SCHEMA = {
           description: { type: "string" },
           placeholder: { type: "string" },
           isRequired: { type: "boolean" },
-          width: {
-            type: "string",
-            enum: [...SUPPORTED_WIDTHS],
-          },
           options: {
             type: "array",
             items: {
@@ -281,28 +267,6 @@ export const FORM_GENERATION_JSON_SCHEMA = {
                 label: { type: "string" },
                 value: { type: "string" },
               },
-            },
-          },
-          validation: {
-            type: "object",
-            additionalProperties: false,
-            required: ["minLength", "maxLength", "min", "max", "pattern"],
-            properties: {
-              minLength: { type: ["number", "null"] },
-              maxLength: { type: ["number", "null"] },
-              min: { type: ["number", "null"] },
-              max: { type: ["number", "null"] },
-              pattern: { type: ["string", "null"] },
-            },
-          },
-          settings: {
-            type: "object",
-            additionalProperties: false,
-            required: ["allowMultiple", "defaultValue", "ratingScale"],
-            properties: {
-              allowMultiple: { type: ["boolean", "null"] },
-              defaultValue: { type: ["string", "null"] },
-              ratingScale: { type: ["number", "null"] },
             },
           },
         },

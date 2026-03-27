@@ -31,6 +31,7 @@ import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { getSafeActionMessage } from "@/lib/client-errors";
+import { getDropPlacement, reorderFieldIds, type DropPlacement } from "@/lib/forms/reorder-fields";
 import {
   FORM_FIELD_TYPE_LABELS,
   FORM_FIELD_TYPE_VALUES,
@@ -93,6 +94,10 @@ export default function FormBuilderPage() {
   const [showDraftPreview, setShowDraftPreview] = useState(false);
   const [previewViewport, setPreviewViewport] = useState<"desktop" | "mobile">("desktop");
   const [dragFieldId, setDragFieldId] = useState<Id<"formFields"> | null>(null);
+  const [dragOverState, setDragOverState] = useState<{
+    fieldId: Id<"formFields">;
+    placement: DropPlacement;
+  } | null>(null);
   const [settingsNotice, setSettingsNotice] = useState<string | null>(null);
   
   const fields = useMemo(() => draft?.fields ?? [], [draft?.fields]);
@@ -106,19 +111,18 @@ export default function FormBuilderPage() {
   );
 
   const applyReorder = useCallback(
-    (fromId: Id<"formFields">, toId: Id<"formFields">) => {
-      if (!draft || fromId === toId) {
+    (fromId: Id<"formFields">, toId: Id<"formFields">, placement: DropPlacement) => {
+      if (!draft) {
         return;
       }
+
       const ids = fields.map((f) => f._id);
-      const from = ids.indexOf(fromId);
-      const to = ids.indexOf(toId);
-      if (from === -1 || to === -1) {
+      const next = reorderFieldIds(ids, fromId, toId, placement);
+
+      if (next.join(":") === ids.join(":")) {
         return;
       }
-      const next = [...ids];
-      next.splice(from, 1);
-      next.splice(to, 0, fromId);
+
       void reorderFieldsMutation({
         formId: draft.form._id,
         clerkOrgId: orgId ?? null,
@@ -563,13 +567,38 @@ export default function FormBuilderPage() {
                       onDragOver={(event) => {
                         event.preventDefault();
                         event.dataTransfer.dropEffect = "move";
+                        if (!dragFieldId || dragFieldId === field._id) {
+                          setDragOverState(null);
+                          return;
+                        }
+
+                        const placement = getDropPlacement(
+                          event.clientY,
+                          event.currentTarget.getBoundingClientRect(),
+                        );
+                        setDragOverState({ fieldId: field._id, placement });
+                      }}
+                      onDragLeave={(event) => {
+                        const related = event.relatedTarget as Node | null;
+                        if (!event.currentTarget.contains(related)) {
+                          setDragOverState((current) =>
+                            current?.fieldId === field._id ? null : current,
+                          );
+                        }
                       }}
                       onDrop={(event) => {
                         event.preventDefault();
                         if (dragFieldId) {
-                          applyReorder(dragFieldId, field._id);
+                          const placement = dragOverState?.fieldId === field._id
+                            ? dragOverState.placement
+                            : getDropPlacement(
+                                event.clientY,
+                                event.currentTarget.getBoundingClientRect(),
+                              );
+                          applyReorder(dragFieldId, field._id, placement);
                         }
                         setDragFieldId(null);
+                        setDragOverState(null);
                       }}
                       className={`group relative flex cursor-pointer gap-3 rounded-2xl border p-5 transition-all ${
                         resolvedSelectedFieldId === field._id
@@ -577,15 +606,35 @@ export default function FormBuilderPage() {
                           : "border-white/10 bg-[#0A0A0A] hover:border-white/20"
                       } ${dragFieldId === field._id ? "opacity-60" : ""}`}
                     >
+                      {dragOverState?.fieldId === field._id ? (
+                        <div
+                          className={`pointer-events-none absolute left-4 right-4 z-10 transition-all ${
+                            dragOverState.placement === "before" ? "-top-2" : "-bottom-2"
+                          }`}
+                        >
+                          <div className="relative flex items-center gap-2">
+                            <div className="h-3 w-3 rounded-full border border-indigo-300/60 bg-indigo-400 shadow-[0_0_16px_rgba(129,140,248,0.8)]" />
+                            <div className="h-[3px] flex-1 rounded-full bg-gradient-to-r from-indigo-400 via-fuchsia-400 to-cyan-400 shadow-[0_0_24px_rgba(99,102,241,0.55)]" />
+                            <span className="rounded-full border border-indigo-400/30 bg-[#0A0A0A] px-2.5 py-1 text-[10px] font-mono uppercase tracking-[0.18em] text-indigo-200 shadow-lg">
+                              Drop {dragOverState.placement === "before" ? "before" : "after"}
+                            </span>
+                          </div>
+                        </div>
+                      ) : null}
+
                       <div
                         className="mt-1 cursor-grab opacity-100 transition-opacity active:cursor-grabbing md:opacity-0 md:group-hover:opacity-100"
                         draggable
                         onDragStart={(event) => {
                           setDragFieldId(field._id);
+                          setDragOverState(null);
                           event.dataTransfer.effectAllowed = "move";
                           event.dataTransfer.setData("text/plain", field._id);
                         }}
-                        onDragEnd={() => setDragFieldId(null)}
+                        onDragEnd={() => {
+                          setDragFieldId(null);
+                          setDragOverState(null);
+                        }}
                         onClick={(event) => event.stopPropagation()}
                       >
                         <GripVertical className="h-4 w-4 text-slate-500" aria-hidden />
